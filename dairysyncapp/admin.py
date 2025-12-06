@@ -3,4 +3,5 @@ from dairysyncapp.models import *
 
 # Register your models here.
 admin.site.register(Farmer)
+admin.site.register(AnimalData)
 

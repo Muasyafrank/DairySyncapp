@@ -10,6 +10,8 @@ def password_reset(request):
     return render(request,'password-reset.html')
 def dashboard(request):
     return render(request,'dashboard.html')
+def animal_list(request):
+    return render(request,'Animals.html')
 def register(request):
    if request.method == 'POST':
        farmer = Farmer(

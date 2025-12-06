@@ -1,828 +1,678 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}{% if animal %}Edit {{ animal.name }}{% else %}Add New Animal{% endif %} - DairySync{% endblock %}</title>
-    <style>
-    .form-container {
-        max-width: 1000px;
-        margin: 0 auto;
-    }
-
-    .form-step {
-        background: white;
-        border-radius: 15px;
-        padding: 30px;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-        margin-bottom: 30px;
-    }
-
-    .form-step-header {
-        border-bottom: 2px solid var(--green-100);
-        padding-bottom: 20px;
-        margin-bottom: 30px;
-    }
-
-    .step-indicator {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 40px;
-        position: relative;
-    }
-
-    .step-indicator::before {
-        content: '';
-        position: absolute;
-        top: 20px;
-        left: 50px;
-        right: 50px;
-        height: 2px;
-        background: var(--green-200);
-        z-index: 1;
-    }
-
-    .step {
-        text-align: center;
-        position: relative;
-        z-index: 2;
-        flex: 1;
-    }
-
-    .step-circle {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: white;
-        border: 2px solid var(--green-200);
-        color: var(--gray-500);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 10px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-    }
-
-    .step.active .step-circle {
-        background: var(--green-600);
-        border-color: var(--green-600);
-        color: white;
-    }
-
-    .step.completed .step-circle {
-        background: var(--green-100);
-        border-color: var(--green-400);
-        color: var(--green-700);
-    }
-
-    .step-label {
-        font-size: 14px;
-        color: var(--gray-600);
-    }
-
-    .step.active .step-label {
-        color: var(--green-700);
-        font-weight: 600;
-    }
-
-    .photo-upload-area {
-        border: 2px dashed var(--green-300);
-        border-radius: 10px;
-        padding: 40px;
-        text-align: center;
-        background: var(--green-50);
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .photo-upload-area:hover {
-        border-color: var(--green-500);
-        background: var(--green-100);
-    }
-
-    .photo-upload-area i {
-        font-size: 48px;
-        color: var(--green-400);
-        margin-bottom: 15px;
-    }
-
-    .photo-preview {
-        width: 150px;
-        height: 150px;
-        border-radius: 10px;
-        object-fit: cover;
-        display: none;
-        margin: 0 auto;
-    }
-
-    .dynamic-field {
-        transition: all 0.3s ease;
-    }
-
-    .form-actions {
-        background: white;
-        border-top: 1px solid var(--gray-200);
-        padding: 20px;
-        position: sticky;
-        bottom: 0;
-        z-index: 100;
-    }
-
-    .info-card {
-        background: var(--green-50);
-        border-radius: 10px;
-        padding: 20px;
-        margin-bottom: 20px;
-        border-left: 4px solid var(--green-400);
-    }
-
-    .form-section {
-        margin-bottom: 30px;
-    }
-
-    .form-section h5 {
-        color: var(--green-700);
-        margin-bottom: 20px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid var(--green-100);
-    }
-
-    .required-field::after {
-        content: ' *';
-        color: #dc3545;
-    }
-
-    @media (max-width: 768px) {
-        .step-indicator {
-            flex-direction: column;
-            gap: 20px;
-        }
-        
-        .step-indicator::before {
-            display: none;
-        }
-        
-        .step {
-            display: flex;
-            align-items: center;
-            text-align: left;
-            gap: 15px;
-        }
-        
-        .step-circle {
-            margin: 0;
-            flex-shrink: 0;
-        }
-        
-        .form-step {
-            padding: 20px;
-        }
-    }
-</style>
+    <title>{% block title %}Dashboard{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/animals.css' %}">
 </head>
-<body> 
-
-
-<div class="container py-4">
-    <!-- Back Button -->
-    <div class="mb-4">
-        <a href="" class="btn btn-outline-dairy">
-            <i class="bi bi-arrow-left me-2"></i> Back to Animals
-        </a>
-    </div>
-
-    <!-- Page Header -->
-    <div class="text-center mb-5">
-        <h1 class="h2 fw-bold text-dark mb-3">
-            {% if animal %}
-                Edit Animal: {{ animal.name }}
-            {% else %}
-                Add New Animal
-            {% endif %}
-        </h1>
-        <p class="text-muted">Fill in the animal details below. All required fields are marked with *</p>
-    </div>
-
-    <!-- Form Container -->
-    <div class="form-container">
-        <!-- Step Indicator -->
-        <div class="step-indicator">
-            <div class="step active" data-step="1">
-                <div class="step-circle">1</div>
-                <div class="step-label">Basic Info</div>
-            </div>
-            <div class="step" data-step="2">
-                <div class="step-circle">2</div>
-                <div class="step-label">Physical Details</div>
-            </div>
-            <div class="step" data-step="3">
-                <div class="step-circle">3</div>
-                <div class="step-label">Origin & Status</div>
-            </div>
-        </div>
-
-        <!-- Multi-step Form -->
-        <form id="animalForm" method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            
-            <!-- Step 1: Basic Information -->
-            <div class="form-step" id="step1">
-                <div class="form-step-header">
-                    <h3 class="h4 fw-semibold text-dark">
-                        <i class="bi bi-info-circle me-2 text-success"></i>
-                        Basic Information
-                    </h3>
-                    <p class="text-muted mb-0">Start by entering the animal's basic details</p>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-section">
-                            <h5>Identification</h5>
-                            <div class="mb-3">
-                                <label class="form-label required-field">Animal ID</label>
-                                <div class="input-group">
-                                    <input type="text" class="form-control" name="animal_id" 
-                                           value="{% if animal %}{{ animal.id }}{% else %}COW-{% now 'ymd' %}-{% endif %}" 
-                                           required>
-                                    <button type="button" class="btn btn-outline-secondary" onclick="generateAnimalId()">
-                                        <i class="bi bi-arrow-clockwise"></i> Generate
-                                    </button>
-                                </div>
-                                <div class="form-text">ID must be unique. Can be auto-generated or manual.</div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Animal Name</label>
-                                <input type="text" class="form-control" name="name" 
-                                       value="{{ animal.name|default:'' }}" 
-                                       placeholder="e.g., Bella, Daisy">
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Ear Tag Number</label>
-                                <input type="text" class="form-control" name="ear_tag" 
-                                       value="{{ animal.ear_tag|default:'' }}">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="form-section">
-                            <h5>Species & Breed</h5>
-                            <div class="mb-3">
-                                <label class="form-label required-field">Species</label>
-                                <select class="form-select" name="species" id="speciesSelect" required>
-                                    <option value="">Select Species</option>
-                                    <option value="cow" {% if animal.species == 'cow' %}selected{% endif %}>Cow</option>
-                                    <option value="buffalo" {% if animal.species == 'buffalo' %}selected{% endif %}>Buffalo</option>
-                                    <option value="goat" {% if animal.species == 'goat' %}selected{% endif %}>Goat</option>
-                                    <option value="sheep" {% if animal.species == 'sheep' %}selected{% endif %}>Sheep</option>
-                                </select>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label required-field">Breed</label>
-                                <select class="form-select" name="breed" id="breedSelect" required>
-                                    <option value="">Select Breed</option>
-                                    <!-- Breeds will be populated dynamically -->
-                                </select>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label required-field">Gender</label>
-                                <select class="form-select" name="gender" required>
-                                    <option value="">Select Gender</option>
-                                    <option value="female" {% if animal.gender == 'female' %}selected{% endif %}>Female</option>
-                                    <option value="male" {% if animal.gender == 'male' %}selected{% endif %}>Male</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-section">
-                            <h5>Date of Birth</h5>
-                            <div class="mb-3">
-                                <label class="form-label required-field">Date of Birth</label>
-                                <input type="date" class="form-control" name="dob" 
-                                       value="{{ animal.dob|default:'' }}" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Age</label>
-                                <div class="input-group">
-                                    <input type="number" class="form-control" name="age_years" 
-                                           value="{{ animal.age_years|default:'' }}" min="0" max="30">
-                                    <span class="input-group-text">years</span>
-                                    <input type="number" class="form-control" name="age_months" 
-                                           value="{{ animal.age_months|default:'' }}" min="0" max="11">
-                                    <span class="input-group-text">months</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="form-section">
-                            <h5>Animal Photo</h5>
-                            <div class="photo-upload-area" onclick="document.getElementById('photoInput').click()">
-                                <i class="bi bi-camera"></i>
-                                <p class="mb-2">Click to upload animal photo</p>
-                                <p class="small text-muted mb-0">JPG, PNG up to 5MB</p>
-                                <input type="file" id="photoInput" name="photo" accept="image/*" style="display: none;" onchange="previewPhoto(event)">
-                            </div>
-                            <img id="photoPreview" class="photo-preview mt-3" alt="Photo preview">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="text-end mt-4">
-                    <button type="button" class="btn btn-dairy-primary" onclick="nextStep()">
-                        Next: Physical Details <i class="bi bi-arrow-right ms-2"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Step 2: Physical Attributes -->
-            <div class="form-step" id="step2" style="display: none;">
-                <div class="form-step-header">
-                    <h3 class="h4 fw-semibold text-dark">
-                        <i class="bi bi-rulers me-2 text-success"></i>
-                        Physical Attributes
-                    </h3>
-                    <p class="text-muted mb-0">Describe the animal's physical characteristics</p>
-                </div>
-
-                <div class="info-card">
-                    <i class="bi bi-info-circle me-2"></i>
-                    <strong>Tip:</strong> Accurate physical details help in identification and health monitoring.
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label class="form-label required-field">Color</label>
-                            <input type="text" class="form-control" name="color" 
-                                   value="{{ animal.color|default:'' }}" 
-                                   placeholder="e.g., Black and white, Brown" required>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Weight (kg)</label>
-                            <div class="input-group">
-                                <input type="number" class="form-control" name="weight" 
-                                       value="{{ animal.weight|default:'' }}" 
-                                       min="0" max="1000" step="0.1">
-                                <span class="input-group-text">kg</span>
-                            </div>
-                            <div class="form-text">Enter current weight</div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Height (cm)</label>
-                            <div class="input-group">
-                                <input type="number" class="form-control" name="height" 
-                                       value="{{ animal.height|default:'' }}" 
-                                       min="0" max="200" step="1">
-                                <span class="input-group-text">cm</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label class="form-label">Body Length (cm)</label>
-                            <div class="input-group">
-                                <input type="number" class="form-control" name="body_length" 
-                                       value="{{ animal.body_length|default:'' }}" 
-                                       min="0" max="300" step="1">
-                                <span class="input-group-text">cm</span>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Chest Girth (cm)</label>
-                            <div class="input-group">
-                                <input type="number" class="form-control" name="chest_girth" 
-                                       value="{{ animal.chest_girth|default:'' }}" 
-                                       min="0" max="300" step="1">
-                                <span class="input-group-text">cm</span>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Body Condition Score</label>
-                            <select class="form-select" name="body_condition_score">
-                                <option value="">Select Score</option>
-                                <option value="1">1 - Very Thin</option>
-                                <option value="2">2 - Thin</option>
-                                <option value="3" selected>3 - Ideal</option>
-                                <option value="4">4 - Overweight</option>
-                                <option value="5">5 - Obese</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Identification Marks</label>
-                    <textarea class="form-control" name="identification_marks" rows="3" 
-                              placeholder="Describe any distinctive marks, scars, or patterns...">{{ animal.identification_marks|default:'' }}</textarea>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Additional Physical Notes</label>
-                    <textarea class="form-control" name="physical_notes" rows="2" 
-                              placeholder="Any other physical observations...">{{ animal.physical_notes|default:'' }}</textarea>
-                </div>
-
-                <div class="d-flex justify-content-between mt-4">
-                    <button type="button" class="btn btn-outline-secondary" onclick="prevStep()">
-                        <i class="bi bi-arrow-left me-2"></i> Back
-                    </button>
-                    <button type="button" class="btn btn-dairy-primary" onclick="nextStep()">
-                        Next: Origin & Status <i class="bi bi-arrow-right ms-2"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Step 3: Origin & Status -->
-            <div class="form-step" id="step3" style="display: none;">
-                <div class="form-step-header">
-                    <h3 class="h4 fw-semibold text-dark">
-                        <i class="bi bi-geo-alt me-2 text-success"></i>
-                        Origin & Status
-                    </h3>
-                    <p class="text-muted mb-0">Information about the animal's origin and current status</p>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-section">
-                            <h5>Origin Information</h5>
-                            <div class="mb-3">
-                                <label class="form-label required-field">Date of Acquisition</label>
-                                <input type="date" class="form-control" name="acquisition_date" 
-                                       value="{{ animal.acquisition_date|default:'' }}" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label required-field">Source</label>
-                                <select class="form-select" name="source" required>
-                                    <option value="">Select Source</option>
-                                    <option value="born_on_farm" {% if animal.source == 'born_on_farm' %}selected{% endif %}>Born on Farm</option>
-                                    <option value="purchased" {% if animal.source == 'purchased' %}selected{% endif %}>Purchased</option>
-                                    <option value="gift" {% if animal.source == 'gift' %}selected{% endif %}>Gift/Donation</option>
-                                    <option value="other" {% if animal.source == 'other' %}selected{% endif %}>Other</option>
-                                </select>
-                            </div>
-
-                            <div class="mb-3 dynamic-field" id="purchaseFields" style="display: none;">
-                                <label class="form-label">Purchase Price</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <input type="number" class="form-control" name="purchase_price" 
-                                           value="{{ animal.purchase_price|default:'' }}" 
-                                           min="0" step="0.01">
-                                </div>
-                            </div>
-
-                            <div class="mb-3 dynamic-field" id="sellerFields" style="display: none;">
-                                <label class="form-label">Seller/Breeder</label>
-                                <input type="text" class="form-control" name="seller" 
-                                       value="{{ animal.seller|default:'' }}">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="form-section">
-                            <h5>Current Status</h5>
-                            <div class="mb-3">
-                                <label class="form-label required-field">Status</label>
-                                <select class="form-select" name="status" required>
-                                    <option value="">Select Status</option>
-                                    <option value="active" selected>Active</option>
-                                    <option value="inactive">Inactive</option>
-                                    <option value="sold">Sold</option>
-                                    <option value="deceased">Deceased</option>
-                                    <option value="transferred">Transferred</option>
-                                </select>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label required-field">Health Status</label>
-                                <select class="form-select" name="health_status" required>
-                                    <option value="">Select Health Status</option>
-                                    <option value="healthy" selected>Healthy</option>
-                                    <option value="sick">Sick</option>
-                                    <option value="under_observation">Under Observation</option>
-                                    <option value="recovering">Recovering</option>
-                                </select>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Group/Pen Assignment</label>
-                                <select class="form-select" name="group_id">
-                                    <option value="">No Group</option>
-                                    <option value="1">Group A - Milking Herd</option>
-                                    <option value="2">Group B - Dry Cows</option>
-                                    <option value="3">Group C - Calves</option>
-                                    <option value="4">Group D - Heifers</option>
-                                </select>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Location/Pen Number</label>
-                                <input type="text" class="form-control" name="location" 
-                                       value="{{ animal.location|default:'' }}" 
-                                       placeholder="e.g., Pen 3, Barn A">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Initial Notes/Comments</label>
-                    <textarea class="form-control" name="initial_notes" rows="3" 
-                              placeholder="Any initial observations, special notes, or comments about this animal...">{{ animal.initial_notes|default:'' }}</textarea>
-                </div>
-
-                <div class="d-flex justify-content-between mt-4">
-                    <button type="button" class="btn btn-outline-secondary" onclick="prevStep()">
-                        <i class="bi bi-arrow-left me-2"></i> Back
-                    </button>
-                    <button type="button" class="btn btn-dairy-primary" onclick="validateAndSubmit()">
-                        {% if animal %}Update Animal{% else %}Save Animal{% endif %}
-                    </button>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Form Actions Bar -->
-<div class="form-actions">
-    <div class="container">
-        <div class="d-flex justify-content-between align-items-center">
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="addAnother">
-                <label class="form-check-label" for="addAnother">
-                    Add another animal after saving
-                </label>
-            </div>
-            <div>
-                <button type="button" class="btn btn-outline-secondary me-2" onclick="resetForm()">
-                    <i class="bi bi-x-circle me-2"></i>Cancel
-                </button>
-                <button type="submit" form="animalForm" class="btn btn-dairy-primary">
-                    {% if animal %}<i class="bi bi-check-circle me-2"></i>Update Animal{% else %}<i class="bi bi-check-circle me-2"></i>Save Animal{% endif %}
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-
-<script>
-    let currentStep = 1;
-    const totalSteps = 3;
+<body>
     
-    // Breed mapping based on species
-    const breedOptions = {
-        cow: [
-            {value: 'holstein', label: 'Holstein'},
-            {value: 'jersey', label: 'Jersey'},
-            {value: 'guernsey', label: 'Guernsey'},
-            {value: 'ayrshire', label: 'Ayrshire'},
-            {value: 'brown_swiss', label: 'Brown Swiss'},
-            {value: 'crossbred', label: 'Crossbred'},
-            {value: 'other', label: 'Other'}
-        ],
-        buffalo: [
-            {value: 'murrah', label: 'Murrah'},
-            {value: 'nili_ravi', label: 'Nili-Ravi'},
-            {value: 'jaffarabadi', label: 'Jaffarabadi'},
-            {value: 'surti', label: 'Surti'},
-            {value: 'mehsana', label: 'Mehsana'},
-            {value: 'other', label: 'Other'}
-        ],
-        goat: [
-            {value: 'saanen', label: 'Saanen'},
-            {value: 'alpine', label: 'Alpine'},
-            {value: 'nubian', label: 'Nubian'},
-            {value: 'boer', label: 'Boer'},
-            {value: 'toggenburg', label: 'Toggenburg'},
-            {value: 'other', label: 'Other'}
-        ],
-        sheep: [
-            {value: 'merino', label: 'Merino'},
-            {value: 'dorper', label: 'Dorper'},
-            {value: 'suffolk', label: 'Suffolk'},
-            {value: 'hampshire', label: 'Hampshire'},
-            {value: 'other', label: 'Other'}
-        ]
-    };
+{% load static %}
 
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Success/Error Messages -->
+    {% if messages %}
+    <div class="messages-container mb-4">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h2 fw-bold text-gray-800">Animal Listing & Milk Logs</h1>
+            <p class="text-muted">Manage your herd and track daily milk production</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="" class="btn btn-success me-2">
+                <i class="bi bi-plus-circle me-2"></i>Add New Animal
+            </a>
+            <button id="bulkEntryBtn" class="btn btn-primary" disabled>
+                <i class="bi bi-droplet me-2"></i>
+                Bulk Milk Entry (<span id="selectedCount">0</span>)
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card stat-card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="card-subtitle text-muted">Total Animals</h6>
+                        <span class="animal-photo">🐄</span>
+                    </div>
+                    <h3 class="card-title text-dark">{{ total_animals }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="card-subtitle text-muted">Today's Total</h6>
+                        <i class="bi bi-droplet-fill text-primary fs-4"></i>
+                    </div>
+                    <h3 class="card-title text-primary">{{ today_total|floatformat:1 }} L</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="card-subtitle text-muted">Average Yield</h6>
+                        <i class="bi bi-graph-up-arrow text-success fs-4"></i>
+                    </div>
+                    <h3 class="card-title text-success">{{ avg_yield|floatformat:1 }} L</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="card-subtitle text-muted">Date</h6>
+                        <i class="bi bi-calendar-date text-purple fs-4"></i>
+                    </div>
+                    <input type="date" id="datePicker" class="form-control" value="{{ selected_date }}">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" id="filterForm">
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="bi bi-search text-muted"></i>
+                            </span>
+                            <input type="text" name="search" class="form-control border-start-0" 
+                                   placeholder="Search by Animal ID, Name, or Ear Tag..." 
+                                   value="{{ search_term }}">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex gap-2">
+                            <button type="button" id="filterToggle" class="btn btn-outline-secondary flex-grow-1">
+                                <i class="bi bi-funnel me-2"></i>
+                                Filters
+                                <i id="filterArrow" class="bi bi-chevron-down ms-1"></i>
+                            </button>
+                            <button type="submit" class="btn btn-dark">
+                                <i class="bi bi-download me-2"></i>
+                                Export
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Filters Row -->
+                <div id="filtersRow" class="row mt-3 border-top pt-3" style="display: none;">
+                    <div class="col-md-4">
+                        <select name="species" class="form-select">
+                            <option value="all">All Species</option>
+                            <option value="Cow" {% if species_filter == 'Cow' %}selected{% endif %}>Cow</option>
+                            <option value="Buffalo" {% if species_filter == 'Buffalo' %}selected{% endif %}>Buffalo</option>
+                            <option value="Goat" {% if species_filter == 'Goat' %}selected{% endif %}>Goat</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <select name="health_status" class="form-select">
+                            <option value="all">All Health Status</option>
+                            <option value="healthy" {% if health_filter == 'healthy' %}selected{% endif %}>Healthy</option>
+                            <option value="observation" {% if health_filter == 'observation' %}selected{% endif %}>Under Observation</option>
+                            <option value="sick" {% if health_filter == 'sick' %}selected{% endif %}>Sick</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <select name="production" class="form-select">
+                            <option value="all">All Production Levels</option>
+                            <option value="high" {% if production_filter == 'high' %}selected{% endif %}>High (&gt; 20L)</option>
+                            <option value="medium" {% if production_filter == 'medium' %}selected{% endif %}>Medium (10-20L)</option>
+                            <option value="low" {% if production_filter == 'low' %}selected{% endif %}>Low (&lt; 10L)</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Animals List -->
+    <div id="animalsContainer">
+        {% for animal in animals %}
+        <div class="card animal-card mb-3">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-auto">
+                        <input type="checkbox" class="form-check-input animal-checkbox" 
+                               data-id="{{ animal.id }}"
+                               style="width: 1.2rem; height: 1.2rem;">
+                    </div>
+                    <div class="col-md-2">
+                        <div class="d-flex align-items-center">
+                            {% if animal.photo %}
+                            <img src="{{ animal.photo.url }}" alt="{{ animal.name }}" 
+                                 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                            {% else %}
+                            <div class="animal-photo me-3">
+                                {% if animal.species == 'Cow' %}🐄
+                                {% elif animal.species == 'Buffalo' %}🐃
+                                {% elif animal.species == 'Goat' %}🐐
+                                {% else %}🐑{% endif %}
+                            </div>
+                            {% endif %}
+                            <div>
+                                <h6 class="mb-0 fw-bold">{{ animal.name|default:"Unnamed" }}</h6>
+                                <small class="text-muted">{{ animal.animal_id }}<br>{{ animal.species }} • {{ animal.breed }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <span class="health-badge {{ animal.health_status }}">
+                            {{ animal.get_health_status_display }}
+                        </span>
+                    </div>
+                    <div class="col-md-1 text-center">
+                        <small class="text-muted d-block">Avg Yield</small>
+                        <span class="fw-bold">
+                            <!--  -->
+                        </span>
+                    </div>
+                    <div class="col-md-2 text-center">
+                        <!-- Trend calculation would go here -->
+                        <div class="trend-stable">
+                            <i class="bi bi-dash me-1"></i>
+                            <span>0.0%</span>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="yield-badge p-2 text-center">
+                            <small class="text-muted d-block">Today's Yield</small>
+                            {% with today_log=animal.milk_logs.filter|date:selected_date|first %}
+                            <span class="fw-bold text-primary">{{ today_log.total_yield|default:0|floatformat:1 }} L</span>
+                            <small class="text-muted d-block">
+                                M: {{ today_log.morning_yield|default:0 }} | E: {{ today_log.evening_yield|default:0 }}
+                            </small>
+                            {% endwith %}
+                        </div>
+                    </div>
+                    <div class="col-md-1">
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-primary" onclick="openEditModal('{{ animal.id }}')">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-dark" onclick="toggleExpand('{{ animal.id }}')">
+                                <i class="bi bi-chevron-down"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Expanded History (Hidden by default) -->
+                <div id="history-{{ animal.id }}" class="mt-4 pt-3 border-top" style="display: none;">
+                    <h6 class="fw-bold mb-3">Recent Milk Production History</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Morning</th>
+                                    <th>Evening</th>
+                                    <th>Total</th>
+                                    <th>Quality</th>
+                                    <th>Notes</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logs-{{ animal.id }}">
+                                <!-- Logs will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="card text-center py-5">
+            <div class="card-body">
+                <div class="mb-3">
+                    <i class="bi bi-search" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="card-title">No Animals Found</h5>
+                <p class="card-text text-muted">Try adjusting your search or filter criteria</p>
+                <a href="" class="btn btn-success">
+                    <i class="bi bi-plus-circle me-2"></i>Add Your First Animal
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Modals -->
+
+
+<!-- Success/Error/Confirmation Modals -->
+<div class="modal fade" id="successModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="modal-alert-icon">
+                    <i class="bi bi-check-circle-fill text-success"></i>
+                </div>
+                <h4 class="modal-title mb-3">Success!</h4>
+                <p id="successMessage"></p>
+                <button type="button" class="btn btn-success" data-bs-dismiss="modal">Continue</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="errorModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="modal-alert-icon error">
+                    <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+                </div>
+                <h4 class="modal-title mb-3">Error!</h4>
+                <p id="errorMessage">Something went wrong. Please try again.</p>
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="modal-alert-icon warning">
+                    <i class="bi bi-question-circle-fill text-warning"></i>
+                </div>
+                <h4 class="modal-title mb-3" id="confirmTitle">Confirm Action</h4>
+                <p id="confirmMessage"></p>
+                <div class="d-flex justify-content-center gap-3 mt-4">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirmActionBtn">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-body text-center py-5">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p id="loadingMessage" class="text-muted mb-0">Processing...</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Global variables
+    let selectedAnimals = [];
+    let currentEditingAnimal = null;
+    let expandedAnimal = null;
+    let csrfToken = '{{ csrf_token }}';
+
+    // Initialize
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize breed selection
-        const speciesSelect = document.getElementById('speciesSelect');
-        const breedSelect = document.getElementById('breedSelect');
-        
-        if (speciesSelect && breedSelect) {
-            speciesSelect.addEventListener('change', function() {
-                updateBreedOptions(this.value, breedSelect);
-            });
-            
-            // Set initial breeds if species is pre-selected
-            if (speciesSelect.value) {
-                updateBreedOptions(speciesSelect.value, breedSelect);
-            }
-        }
-        
-        // Handle source selection for dynamic fields
-        const sourceSelect = document.querySelector('select[name="source"]');
-        if (sourceSelect) {
-            sourceSelect.addEventListener('change', function() {
-                toggleDynamicFields(this.value);
-            });
-            toggleDynamicFields(sourceSelect.value);
-        }
-        
-        // Date of birth change listener
-        const dobInput = document.querySelector('input[name="dob"]');
-        if (dobInput) {
-            dobInput.addEventListener('change', calculateAge);
-        }
+        setupEventListeners();
     });
 
-    function updateBreedOptions(species, breedSelect) {
-        breedSelect.innerHTML = '<option value="">Select Breed</option>';
-        
-        if (species && breedOptions[species]) {
-            breedOptions[species].forEach(breed => {
-                const option = document.createElement('option');
-                option.value = breed.value;
-                option.textContent = breed.label;
-                breedSelect.appendChild(option);
-            });
-        }
-    }
+    function setupEventListeners() {
+        // Date picker change
+        document.getElementById('datePicker').addEventListener('change', function() {
+            document.getElementById('filterForm').submit();
+        });
 
-    function toggleDynamicFields(source) {
-        const purchaseFields = document.getElementById('purchaseFields');
-        const sellerFields = document.getElementById('sellerFields');
-        
-        if (source === 'purchased') {
-            purchaseFields.style.display = 'block';
-            sellerFields.style.display = 'block';
-        } else {
-            purchaseFields.style.display = 'none';
-            sellerFields.style.display = 'none';
-        }
-    }
-
-    function calculateAge() {
-        const dobInput = document.querySelector('input[name="dob"]');
-        const yearsInput = document.querySelector('input[name="age_years"]');
-        const monthsInput = document.querySelector('input[name="age_months"]');
-        
-        if (dobInput.value) {
-            const dob = new Date(dobInput.value);
-            const today = new Date();
+        // Filter toggle
+        document.getElementById('filterToggle').addEventListener('click', function() {
+            const filtersRow = document.getElementById('filtersRow');
+            const arrow = document.getElementById('filterArrow');
+            const isVisible = filtersRow.style.display !== 'none';
             
-            let years = today.getFullYear() - dob.getFullYear();
-            let months = today.getMonth() - dob.getMonth();
-            
-            if (months < 0) {
-                years--;
-                months += 12;
-            }
-            
-            if (yearsInput) yearsInput.value = years;
-            if (monthsInput) monthsInput.value = months;
-        }
-    }
+            filtersRow.style.display = isVisible ? 'none' : 'block';
+            arrow.className = isVisible ? 'bi bi-chevron-down ms-1' : 'bi bi-chevron-up ms-1';
+        });
 
-    function generateAnimalId() {
-        const idInput = document.querySelector('input[name="animal_id"]');
-        const species = document.getElementById('speciesSelect').value;
-        const date = new Date();
-        const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-        
-        if (species) {
-            const prefix = species.toUpperCase().substring(0, 3);
-            const timestamp = date.getTime().toString().slice(-4);
-            idInput.value = `${prefix}-${timestamp}-${random}`;
-        }
-    }
-
-    function previewPhoto(event) {
-        const file = event.target.files[0];
-        const preview = document.getElementById('photoPreview');
-        const uploadArea = document.querySelector('.photo-upload-area');
-        
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                preview.src = e.target.result;
-                preview.style.display = 'block';
-                uploadArea.style.display = 'none';
-            };
-            reader.readAsDataURL(file);
-        }
-    }
-
-    function nextStep() {
-        if (validateStep(currentStep)) {
-            document.getElementById(`step${currentStep}`).style.display = 'none';
-            updateStepIndicator(currentStep, 'completed');
-            
-            currentStep++;
-            document.getElementById(`step${currentStep}`).style.display = 'block';
-            updateStepIndicator(currentStep, 'active');
-        }
-    }
-
-    function prevStep() {
-        document.getElementById(`step${currentStep}`).style.display = 'none';
-        updateStepIndicator(currentStep, '');
-        
-        currentStep--;
-        document.getElementById(`step${currentStep}`).style.display = 'block';
-        updateStepIndicator(currentStep, 'active');
-    }
-
-    function validateStep(step) {
-        let isValid = true;
-        const stepElement = document.getElementById(`step${step}`);
-        
-        // Get all required inputs in this step
-        const requiredInputs = stepElement.querySelectorAll('[required]');
-        
-        requiredInputs.forEach(input => {
-            if (!input.value.trim()) {
-                isValid = false;
-                input.classList.add('is-invalid');
-                
-                // Add validation message
-                if (!input.nextElementSibling || !input.nextElementSibling.classList.contains('invalid-feedback')) {
-                    const feedback = document.createElement('div');
-                    feedback.className = 'invalid-feedback';
-                    feedback.textContent = 'This field is required';
-                    input.parentNode.appendChild(feedback);
+        // Animal checkbox handling
+        document.getElementById('animalsContainer').addEventListener('change', function(e) {
+            if (e.target.classList.contains('animal-checkbox')) {
+                const animalId = e.target.dataset.id;
+                if (e.target.checked) {
+                    selectedAnimals.push(animalId);
+                } else {
+                    selectedAnimals = selectedAnimals.filter(id => id !== animalId);
                 }
-            } else {
-                input.classList.remove('is-invalid');
-                const feedback = input.nextElementSibling;
-                if (feedback && feedback.classList.contains('invalid-feedback')) {
-                    feedback.remove();
-                }
+                updateSelectedCount();
             }
         });
+
+        // Bulk entry button
+        document.getElementById('bulkEntryBtn').addEventListener('click', openBulkEntryModal);
+    }
+
+    function updateSelectedCount() {
+        document.getElementById('selectedCount').textContent = selectedAnimals.length;
+        document.getElementById('bulkEntryBtn').disabled = selectedAnimals.length === 0;
+    }
+
+    function toggleExpand(animalId) {
+        const historyDiv = document.getElementById(`history-${animalId}`);
+        const button = event.target.closest('button');
         
-        return isValid;
-    }
-
-    function updateStepIndicator(step, status) {
-        const stepElement = document.querySelector(`.step[data-step="${step}"]`);
-        if (stepElement) {
-            stepElement.className = `step ${status}`;
+        if (historyDiv.style.display === 'none') {
+            historyDiv.style.display = 'block';
+            button.innerHTML = '<i class="bi bi-chevron-up"></i>';
+            loadAnimalLogs(animalId);
+        } else {
+            historyDiv.style.display = 'none';
+            button.innerHTML = '<i class="bi bi-chevron-down"></i>';
         }
     }
 
-    function validateAndSubmit() {
-        if (validateStep(currentStep)) {
-            // Validate all steps
-            let allValid = true;
-            for (let i = 1; i <= totalSteps; i++) {
-                if (!validateStep(i)) {
-                    allValid = false;
-                    break;
-                }
-            }
+    async function loadAnimalLogs(animalId) {
+        try {
+            const response = await fetch(`/animals/${animalId}/logs/`);
+            const data = await response.json();
             
-            if (allValid) {
-                // Submit the form
-                document.getElementById('animalForm').submit();
-            } else {
-                alert('Please fix all validation errors before submitting.');
-            }
+            const logsContainer = document.getElementById(`logs-${animalId}`);
+            logsContainer.innerHTML = '';
+            
+            data.logs.forEach(log => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${log.date}</td>
+                    <td>${log.morning} L</td>
+                    <td>${log.evening} L</td>
+                    <td class="fw-bold text-primary">${log.total} L</td>
+                    <td><span class="quality-badge ${log.quality}">${log.quality}</span></td>
+                    <td>${log.notes || '-'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" 
+                                onclick="openEditModal('${animalId}', '${log.date}')">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                    </td>
+                `;
+                logsContainer.appendChild(row);
+            });
+        } catch (error) {
+            console.error('Error loading logs:', error);
         }
     }
 
-    function resetForm() {
-        if (confirm('Are you sure you want to cancel? All unsaved changes will be lost.')) {
-            window.location.href = "";
+    function openEditModal(animalId, logDate = null) {
+        currentEditingAnimal = animalId;
+        
+        // If logDate is provided, we're editing an existing log
+        // Otherwise, we're creating a new log for today
+        const date = logDate || document.getElementById('datePicker').value;
+        
+        // Get animal info for display
+        const animalCard = document.querySelector(`[data-id="${animalId}"]`).closest('.animal-card');
+        const animalName = animalCard.querySelector('h6').textContent;
+        const animalIdText = animalCard.querySelector('small').textContent.split('\n')[0];
+        
+        // Populate modal
+        document.getElementById('modalAnimalInfo').textContent = 
+            `${animalName} (${animalIdText}) - ${date}`;
+        
+        // Reset form
+        document.getElementById('morningYield').value = '';
+        document.getElementById('eveningYield').value = '';
+        document.getElementById('milkQuality').value = 'good';
+        document.getElementById('logNotes').value = '';
+        
+        // If editing existing log, load data
+        if (logDate) {
+            // You would need to fetch the specific log data here
+            // For now, we'll show the modal with empty fields
         }
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('logEditModal'));
+        modal.show();
+    }
+
+    async function saveLog() {
+        const morning = parseFloat(document.getElementById('morningYield').value) || 0;
+        const evening = parseFloat(document.getElementById('eveningYield').value) || 0;
+        const quality = document.getElementById('milkQuality').value;
+        const notes = document.getElementById('logNotes').value;
+        const date = document.getElementById('datePicker').value;
+        
+        const data = {
+            'date': date,
+            'morning_yield': morning,
+            'evening_yield': evening,
+            'quality': quality,
+            'notes': notes
+        };
+        
+        try {
+            const response = await fetch(`/animals/${currentEditingAnimal}/milk-log/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showSuccess('Milk log saved successfully!');
+                // Close modal
+                bootstrap.Modal.getInstance(document.getElementById('logEditModal')).hide();
+                // Reload page to show updated data
+                location.reload();
+            } else {
+                showError(result.errors || 'Failed to save milk log.');
+            }
+        } catch (error) {
+            showError('Network error. Please try again.');
+        }
+    }
+
+    function openBulkEntryModal() {
+        const date = document.getElementById('datePicker').value;
+        const modalBody = document.getElementById('bulkEntriesContainer');
+        modalBody.innerHTML = '';
+        
+        // Get selected animals
+        selectedAnimals.forEach(animalId => {
+            const checkbox = document.querySelector(`[data-id="${animalId}"]`);
+            const animalCard = checkbox.closest('.animal-card');
+            const animalName = animalCard.querySelector('h6').textContent;
+            const animalIdText = animalCard.querySelector('small').textContent.split('\n')[0];
+            
+            const entryDiv = document.createElement('div');
+            entryDiv.className = 'card mb-3';
+            entryDiv.innerHTML = `
+                <div class="card-body">
+                    <div class="row align-items-center mb-3">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center">
+                                <div class="animal-photo me-3">
+                                    ${animalCard.querySelector('.animal-photo').innerHTML}
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 fw-bold">${animalName}</h6>
+                                    <small class="text-muted">${animalIdText}</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <small class="text-muted">Avg Yield: 0.0 L</small>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Morning (L)</label>
+                            <input type="number" step="0.1" 
+                                   class="form-control bulk-morning" 
+                                   data-animal-id="${animalId}"
+                                   placeholder="0.0">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Evening (L)</label>
+                            <input type="number" step="0.1" 
+                                   class="form-control bulk-evening" 
+                                   data-animal-id="${animalId}"
+                                   placeholder="0.0">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Quality</label>
+                            <select class="form-select bulk-quality" data-animal-id="${animalId}">
+                                <option value="good">Good</option>
+                                <option value="excellent">Excellent</option>
+                                <option value="fair">Fair</option>
+                                <option value="poor">Poor</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Total</label>
+                            <div class="form-control bg-light bulk-total" data-animal-id="${animalId}">
+                                0.0
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            modalBody.appendChild(entryDiv);
+        });
+        
+        // Add event listeners for bulk inputs
+        modalBody.querySelectorAll('.bulk-morning, .bulk-evening').forEach(input => {
+            input.addEventListener('input', updateBulkTotal);
+        });
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('bulkEntryModal'));
+        modal.show();
+    }
+
+    function updateBulkTotal(e) {
+        const animalId = e.target.dataset.animalId;
+        const container = e.target.closest('.card-body');
+        const morning = parseFloat(container.querySelector('.bulk-morning').value) || 0;
+        const evening = parseFloat(container.querySelector('.bulk-evening').value) || 0;
+        container.querySelector('.bulk-total').textContent = (morning + evening).toFixed(1);
+    }
+
+    async function saveBulkEntries() {
+        const date = document.getElementById('datePicker').value;
+        const entries = {};
+        
+        document.querySelectorAll('.bulk-morning').forEach(input => {
+            const animalId = input.dataset.animalId;
+            const container = input.closest('.card-body');
+            const morning = parseFloat(input.value) || 0;
+            const evening = parseFloat(container.querySelector('.bulk-evening').value) || 0;
+            const quality = container.querySelector('.bulk-quality').value;
+            
+            entries[animalId] = {
+                'morning': morning,
+                'evening': evening,
+                'quality': quality
+            };
+        });
+        
+        const data = {
+            'date': date,
+            'entries': entries
+        };
+        
+        try {
+            const response = await fetch('/animals/bulk-milk-entry/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showSuccess(result.message);
+                // Close modal
+                bootstrap.Modal.getInstance(document.getElementById('bulkEntryModal')).hide();
+                // Clear selections
+                selectedAnimals = [];
+                updateSelectedCount();
+                // Reload page
+                location.reload();
+            } else {
+                showError(result.error || 'Failed to save bulk entries.');
+            }
+        } catch (error) {
+            showError('Network error. Please try again.');
+        }
+    }
+
+    function showSuccess(message) {
+        document.getElementById('successMessage').textContent = message;
+        const modal = new bootstrap.Modal(document.getElementById('successModal'));
+        modal.show();
+    }
+
+    function showError(message) {
+        document.getElementById('errorMessage').textContent = message;
+        const modal = new bootstrap.Modal(document.getElementById('errorModal'));
+        modal.show();
+    }
+
+    function showConfirm(title, message, onConfirm) {
+        document.getElementById('confirmTitle').textContent = title;
+        document.getElementById('confirmMessage').textContent = message;
+        
+        const confirmBtn = document.getElementById('confirmActionBtn');
+        confirmBtn.onclick = onConfirm;
+        
+        const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+        modal.show();
+    }
+
+    function showLoading(message = 'Processing...') {
+        document.getElementById('loadingMessage').textContent = message;
+        const modal = new bootstrap.Modal(document.getElementById('loadingModal'));
+        modal.show();
+    }
+
+    function hideLoading() {
+        const modal = bootstrap.Modal.getInstance(document.getElementById('loadingModal'));
+        if (modal) modal.hide();
     }
 </script>
-
+{% endblock %}
 </body>
 </html>

@@ -472,10 +472,9 @@
             <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                 <ul class="navbar-nav align-items-center">
                     <li class="nav-item"><a class="nav-link" href="#home">Home</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#story">Our Business</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#blog">Blog</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
-                    <li class="nav-item"><button class="btn btn-primary ms-3">Get Started</button></li>
+                    <li class="nav-item"><a class="nav-link" href="#story">Our Story</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#testimonial">Testimonials</a></li>
+                    <li class="nav-item"><a href="{% url 'login' %}" class="btn btn-primary ms-3">Get Started</a></li>
                 </ul>
             </div>
         </div>
@@ -603,7 +602,7 @@
     </section>
 
     <!-- Testimonials -->
-    <section class="testimonials-section">
+    <section class="testimonials-section" id="testimonial">
         <div class="container">
             <h2 class="section-title text-center">What They Say About Us</h2>
             <div class="row">
@@ -663,7 +662,7 @@
     <section class="cta-section">
         <div class="container">
             <h2>Improve your milk production efficiency with our platform and access expert advice—completely free.</h2>
-            <button class="btn btn-warning btn-lg mt-4">Get Started Now</button>
+            <a href="{% url 'login' %}" class="btn btn-warning btn-lg mt-4">Get Started Now</a>
         </div>
     </section>
 

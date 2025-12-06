@@ -1,0 +1,769 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animal Registration - Dairy Farm Management</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/animals.css' %}">
+    
+    <style>
+        :root {
+            --green-50: #f0fdf4;
+            --green-100: #dcfce7;
+            --green-200: #bbf7d0;
+            --green-300: #86efac;
+            --green-400: #4ade80;
+            --green-500: #22c55e;
+            --green-600: #16a34a;
+            --green-700: #15803d;
+            --green-800: #166534;
+            --green-900: #14532d;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--gray-50);
+            color: var(--gray-800);
+            min-height: 100vh;
+        }
+
+        .form-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .form-step {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+            display: none;
+        }
+
+        .form-step.active {
+            display: block;
+        }
+
+        .form-step-header {
+            border-bottom: 2px solid var(--green-100);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .step-indicator::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 50px;
+            right: 50px;
+            height: 2px;
+            background: var(--green-200);
+            z-index: 1;
+        }
+
+        .step {
+            text-align: center;
+            position: relative;
+            z-index: 2;
+            flex: 1;
+        }
+
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid var(--green-200);
+            color: var(--gray-500);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .step.active .step-circle {
+            background: var(--green-600);
+            border-color: var(--green-600);
+            color: white;
+        }
+
+        .step.completed .step-circle {
+            background: var(--green-100);
+            border-color: var(--green-400);
+            color: var(--green-700);
+        }
+
+        .step-label {
+            font-size: 14px;
+            color: var(--gray-600);
+        }
+
+        .step.active .step-label {
+            color: var(--green-700);
+            font-weight: 600;
+        }
+
+        .photo-upload-area {
+            border: 2px dashed var(--green-300);
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            background: var(--green-50);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .photo-upload-area:hover {
+            border-color: var(--green-500);
+            background: var(--green-100);
+        }
+
+        .photo-upload-area i {
+            font-size: 48px;
+            color: var(--green-400);
+            margin-bottom: 15px;
+        }
+
+        .photo-preview {
+            width: 150px;
+            height: 150px;
+            border-radius: 10px;
+            object-fit: cover;
+            display: none;
+            margin: 0 auto;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+        }
+
+        .form-section h5 {
+            color: var(--green-700);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--green-100);
+        }
+
+        .required-field::after {
+            content: ' *';
+            color: #dc3545;
+        }
+
+        .btn-dairy-primary {
+            background: linear-gradient(135deg, var(--green-600) 0%, var(--green-700) 100%);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-dairy-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(22, 163, 74, 0.2);
+            color: white;
+        }
+
+        .btn-outline-dairy {
+            border: 2px solid var(--green-600);
+            color: var(--green-600);
+            background: transparent;
+            padding: 10px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline-dairy:hover {
+            background: var(--green-600);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .info-card {
+            background: var(--green-50);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--green-400);
+        }
+
+        .dynamic-field {
+            transition: all 0.3s ease;
+        }
+
+        .form-actions {
+            background: white;
+            border-top: 1px solid var(--gray-200);
+            padding: 20px;
+            position: sticky;
+            bottom: 0;
+            z-index: 100;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Modal Styles */
+        .modal-alert-icon {
+            font-size: 3rem;
+            color: var(--green-500);
+            margin-bottom: 1rem;
+        }
+
+        .modal-alert-icon.warning {
+            color: #f59e0b;
+        }
+
+        .modal-alert-icon.error {
+            color: #dc2626;
+        }
+
+        .modal-alert-icon.info {
+            color: #3b82f6;
+        }
+
+        @media (max-width: 768px) {
+            .step-indicator {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .step-indicator::before {
+                display: none;
+            }
+            
+            .step {
+                display: flex;
+                align-items: center;
+                text-align: left;
+                gap: 15px;
+            }
+            
+            .step-circle {
+                margin: 0;
+                flex-shrink: 0;
+            }
+            
+            .form-step {
+                padding: 20px;
+            }
+            
+            .btn-dairy-primary, .btn-outline-dairy {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold text-success" href="#">
+                <i class="bi bi-droplet-half me-2"></i>DairyFarm Pro
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/animals/list/">
+                    <i class="bi bi-list-ul me-1"></i>View Animals
+                </a>
+                <a class="nav-link active" href="/animals/register/">
+                    <i class="bi bi-plus-circle me-1"></i>Register Animal
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="form-container">
+        <!-- Page Header -->
+        <div class="text-center mb-5">
+            <h1 class="h2 fw-bold text-dark mb-3">Register New Animal</h1>
+            <p class="text-muted">Fill in the animal details below. All required fields are marked with *</p>
+        </div>
+
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+            <div class="step active" data-step="1">
+                <div class="step-circle">1</div>
+                <div class="step-label">Basic Info</div>
+            </div>
+            <div class="step" data-step="2">
+                <div class="step-circle">2</div>
+                <div class="step-label">Physical Details</div>
+            </div>
+            <div class="step" data-step="3">
+                <div class="step-circle">3</div>
+                <div class="step-label">Origin & Status</div>
+            </div>
+        </div>
+
+        <!-- Multi-step Form -->
+        <form id="animalForm" enctype="multipart/form-data">
+            <!-- Step 1: Basic Information -->
+            <div class="form-step active" id="step1">
+                <div class="form-step-header">
+                    <h3 class="h4 fw-semibold text-dark">
+                        <i class="bi bi-info-circle me-2 text-success"></i>
+                        Basic Information
+                    </h3>
+                    <p class="text-muted mb-0">Start by entering the animal's basic details</p>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-section">
+                            <h5>Identification</h5>
+                            <div class="mb-3">
+                                <label class="form-label required-field">Animal ID</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="animal_id" name="animal_id" readonly>
+                                    <button type="button" class="btn btn-outline-secondary" onclick="generateAnimalId()">
+                                        <i class="bi bi-arrow-clockwise"></i> Generate
+                                    </button>
+                                </div>
+                                <div class="form-text">ID will be auto-generated based on species</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Animal Name</label>
+                                <input type="text" class="form-control" id="name" name="name" 
+                                       placeholder="e.g., Bella, Daisy">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Ear Tag Number</label>
+                                <input type="text" class="form-control" id="ear_tag" name="ear_tag">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-section">
+                            <h5>Species & Breed</h5>
+                            <div class="mb-3">
+                                <label class="form-label required-field">Species</label>
+                                <select class="form-select" id="species" name="species" required>
+                                    <option value="">Select Species</option>
+                                    <option value="Cow">Cow</option>
+                                    <option value="Buffalo">Buffalo</option>
+                                    <option value="Goat">Goat</option>
+                                    <option value="Sheep">Sheep</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label required-field">Breed</label>
+                                <select class="form-select" id="breed" name="breed" required>
+                                    <option value="">Select Breed</option>
+                                    <!-- Breeds will be populated dynamically -->
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label required-field">Gender</label>
+                                <select class="form-select" id="gender" name="gender" required>
+                                    <option value="">Select Gender</option>
+                                    <option value="female">Female</option>
+                                    <option value="male">Male</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-section">
+                            <h5>Date of Birth</h5>
+                            <div class="mb-3">
+                                <label class="form-label required-field">Date of Birth</label>
+                                <input type="date" class="form-control" id="dob" name="dob" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Age (Auto-calculated)</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="age_years" name="age_years" 
+                                           value="0" min="0" max="30" readonly>
+                                    <span class="input-group-text">years</span>
+                                    <input type="number" class="form-control" id="age_months" name="age_months" 
+                                           value="0" min="0" max="11" readonly>
+                                    <span class="input-group-text">months</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-section">
+                            <h5>Animal Photo</h5>
+                            <div class="photo-upload-area" onclick="document.getElementById('photoInput').click()">
+                                <i class="bi bi-camera"></i>
+                                <p class="mb-2">Click to upload animal photo</p>
+                                <p class="small text-muted mb-0">JPG, PNG up to 5MB</p>
+                                <input type="file" id="photoInput" name="photo" accept="image/*" style="display: none;" onchange="previewPhoto(event)">
+                            </div>
+                            <img id="photoPreview" class="photo-preview mt-3" alt="Photo preview">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-end mt-4">
+                    <button type="button" class="btn btn-dairy-primary" onclick="nextStep()">
+                        Next: Physical Details <i class="bi bi-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 2: Physical Attributes -->
+            <div class="form-step" id="step2">
+                <div class="form-step-header">
+                    <h3 class="h4 fw-semibold text-dark">
+                        <i class="bi bi-rulers me-2 text-success"></i>
+                        Physical Attributes
+                    </h3>
+                    <p class="text-muted mb-0">Describe the animal's physical characteristics</p>
+                </div>
+
+                <div class="info-card">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Tip:</strong> Accurate physical details help in identification and health monitoring.
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label required-field">Color</label>
+                            <input type="text" class="form-control" id="color" name="color" 
+                                   placeholder="e.g., Black and white, Brown" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Weight (kg)</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="weight" name="weight" 
+                                       min="0" max="1000" step="0.1">
+                                <span class="input-group-text">kg</span>
+                            </div>
+                            <div class="form-text">Enter current weight</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Height (cm)</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="height" name="height" 
+                                       min="0" max="200" step="1">
+                                <span class="input-group-text">cm</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Body Length (cm)</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="body_length" name="body_length" 
+                                       min="0" max="300" step="1">
+                                <span class="input-group-text">cm</span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Chest Girth (cm)</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="chest_girth" name="chest_girth" 
+                                       min="0" max="300" step="1">
+                                <span class="input-group-text">cm</span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Body Condition Score</label>
+                            <select class="form-select" id="body_condition_score" name="body_condition_score">
+                                <option value="">Select Score</option>
+                                <option value="1">1 - Very Thin</option>
+                                <option value="2">2 - Thin</option>
+                                <option value="3" selected>3 - Ideal</option>
+                                <option value="4">4 - Overweight</option>
+                                <option value="5">5 - Obese</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Identification Marks</label>
+                    <textarea class="form-control" id="identification_marks" name="identification_marks" rows="3" 
+                              placeholder="Describe any distinctive marks, scars, or patterns..."></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Additional Physical Notes</label>
+                    <textarea class="form-control" id="physical_notes" name="physical_notes" rows="2" 
+                              placeholder="Any other physical observations..."></textarea>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <button type="button" class="btn btn-outline-dairy" onclick="prevStep()">
+                        <i class="bi bi-arrow-left me-2"></i> Back
+                    </button>
+                    <button type="button" class="btn btn-dairy-primary" onclick="nextStep()">
+                        Next: Origin & Status <i class="bi bi-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 3: Origin & Status -->
+            <div class="form-step" id="step3">
+                <div class="form-step-header">
+                    <h3 class="h4 fw-semibold text-dark">
+                        <i class="bi bi-geo-alt me-2 text-success"></i>
+                        Origin & Status
+                    </h3>
+                    <p class="text-muted mb-0">Information about the animal's origin and current status</p>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-section">
+                            <h5>Origin Information</h5>
+                            <div class="mb-3">
+                                <label class="form-label required-field">Date of Acquisition</label>
+                                <input type="date" class="form-control" id="acquisition_date" name="acquisition_date" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label required-field">Source</label>
+                                <select class="form-select" id="source" name="source" required>
+                                    <option value="">Select Source</option>
+                                    <option value="born_on_farm">Born on Farm</option>
+                                    <option value="purchased">Purchased</option>
+                                    <option value="gift">Gift/Donation</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3 dynamic-field" id="purchaseFields" style="display: none;">
+                                <label class="form-label">Purchase Price ($)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="purchase_price" name="purchase_price" 
+                                           min="0" step="0.01">
+                                </div>
+                            </div>
+
+                            <div class="mb-3 dynamic-field" id="sellerFields" style="display: none;">
+                                <label class="form-label">Seller/Breeder</label>
+                                <input type="text" class="form-control" id="seller" name="seller">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-section">
+                            <h5>Current Status</h5>
+                            <div class="mb-3">
+                                <label class="form-label required-field">Status</label>
+                                <select class="form-select" id="status" name="status" required>
+                                    <option value="">Select Status</option>
+                                    <option value="active" selected>Active</option>
+                                    <option value="inactive">Inactive</option>
+                                    <option value="sold">Sold</option>
+                                    <option value="deceased">Deceased</option>
+                                    <option value="transferred">Transferred</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label required-field">Health Status</label>
+                                <select class="form-select" id="health_status" name="health_status" required>
+                                    <option value="">Select Health Status</option>
+                                    <option value="healthy" selected>Healthy</option>
+                                    <option value="observation">Under Observation</option>
+                                    <option value="sick">Sick</option>
+                                    <option value="recovering">Recovering</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Group/Pen Assignment</label>
+                                <select class="form-select" id="group" name="group">
+                                    <option value="">No Group</option>
+                                    <option value="Group A - Milking Herd">Group A - Milking Herd</option>
+                                    <option value="Group B - Dry Cows">Group B - Dry Cows</option>
+                                    <option value="Group C - Calves">Group C - Calves</option>
+                                    <option value="Group D - Heifers">Group D - Heifers</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Location/Pen Number</label>
+                                <input type="text" class="form-control" id="location" name="location" 
+                                       placeholder="e.g., Pen 3, Barn A">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Initial Notes/Comments</label>
+                    <textarea class="form-control" id="initial_notes" name="initial_notes" rows="3" 
+                              placeholder="Any initial observations, special notes, or comments about this animal..."></textarea>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <button type="button" class="btn btn-outline-dairy" onclick="prevStep()">
+                        <i class="bi bi-arrow-left me-2"></i> Back
+                    </button>
+                    <button type="button" class="btn btn-dairy-primary" onclick="validateAndSubmit()">
+                        <i class="bi bi-check-circle me-2"></i>Save Animal
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Form Actions Bar -->
+    <div class="form-actions">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="addAnother">
+                    <label class="form-check-label" for="addAnother">
+                        Add another animal after saving
+                    </label>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-outline-secondary me-2" onclick="showCancelConfirmationModal()">
+                        <i class="bi bi-x-circle me-2"></i>Cancel
+                    </button>
+                    <button type="button" class="btn btn-dairy-primary" onclick="validateAndSubmit()">
+                        <i class="bi bi-check-circle me-2"></i>Save Animal
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Success Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center py-4">
+                    <div class="modal-alert-icon">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </div>
+                    <h4 class="modal-title mb-3">Success!</h4>
+                    <p id="successMessage"></p>
+                    <div class="d-flex justify-content-center gap-3 mt-4">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Continue</button>
+                        <button type="button" class="btn btn-success" onclick="redirectToList()">
+                            <i class="bi bi-eye me-2"></i>View Animals
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div class="modal fade" id="errorModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center py-4">
+                    <div class="modal-alert-icon error">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                    </div>
+                    <h4 class="modal-title mb-3">Error!</h4>
+                    <p id="errorMessage"></p>
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cancel Confirmation Modal -->
+    <div class="modal fade" id="cancelConfirmationModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center py-4">
+                    <div class="modal-alert-icon warning">
+                        <i class="bi bi-question-circle-fill"></i>
+                    </div>
+                    <h4 class="modal-title mb-3">Cancel Form?</h4>
+                    <p>Are you sure you want to cancel? All unsaved changes will be lost.</p>
+                    <div class="d-flex justify-content-center gap-3 mt-4">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">No, Keep Editing</button>
+                        <button type="button" class="btn btn-danger" onclick="redirectToList()">Yes, Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Modal -->
+    <div class="modal fade" id="loadingModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-body text-center py-5">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p id="loadingMessage" class="text-muted mb-0">Saving data...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script src="{% static 'js/animal_registration.js' %}"></script>
+    
+    <script>
+        // Initialize modals
+        let successModal = new bootstrap.Modal(document.getElementById('successModal'));
+        let errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+        let cancelConfirmationModal = new bootstrap.Modal(document.getElementById('cancelConfirmationModal'));
+        let loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeForm();
+            generateAnimalId();
+        });
+    </script>
+</body>
+</html>

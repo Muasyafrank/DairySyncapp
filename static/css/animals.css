@@ -1,0 +1,1485 @@
+/* 
+ * animals.css
+ * Main stylesheet for Dairy Farm Animal Management System
+ * Version: 1.0.0
+ */
+
+/* ==========================================================================
+   ROOT VARIABLES & GLOBAL STYLES
+   ========================================================================== */
+
+:root {
+    /* Primary Color Palette - Dairy Farm Theme */
+    --green-50: #f0fdf4;
+    --green-100: #dcfce7;
+    --green-200: #bbf7d0;
+    --green-300: #86efac;
+    --green-400: #4ade80;
+    --green-500: #22c55e;
+    --green-600: #16a34a;
+    --green-700: #15803d;
+    --green-800: #166534;
+    --green-900: #14532d;
+    
+    /* Gray Scale */
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --gray-900: #111827;
+    
+    /* Status Colors */
+    --status-healthy: var(--green-500);
+    --status-observation: #f59e0b;
+    --status-sick: #dc2626;
+    --status-recovering: #3b82f6;
+    
+    /* Quality Colors */
+    --quality-excellent: var(--green-500);
+    --quality-good: #3b82f6;
+    --quality-fair: #f59e0b;
+    --quality-poor: #dc2626;
+    
+    /* Spacing */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-2xl: 3rem;
+    
+    /* Border Radius */
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+    --radius-full: 9999px;
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+    
+    /* Transitions */
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* Z-index layers */
+    --z-dropdown: 1000;
+    --z-sticky: 1020;
+    --z-fixed: 1030;
+    --z-modal-backdrop: 1040;
+    --z-modal: 1050;
+    --z-popover: 1060;
+    --z-tooltip: 1070;
+    --z-toast: 1080;
+}
+
+/* Reset & Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.5;
+    color: var(--gray-800);
+    background-color: var(--gray-50);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ==========================================================================
+   TYPOGRAPHY
+   ========================================================================== */
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: var(--spacing-md);
+    color: var(--gray-900);
+}
+
+h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+
+h2 {
+    font-size: 2rem;
+}
+
+h3 {
+    font-size: 1.75rem;
+}
+
+h4 {
+    font-size: 1.5rem;
+}
+
+h5 {
+    font-size: 1.25rem;
+}
+
+h6 {
+    font-size: 1rem;
+}
+
+.text-muted {
+    color: var(--gray-600) !important;
+}
+
+.text-small {
+    font-size: 0.875rem;
+}
+
+.text-xsmall {
+    font-size: 0.75rem;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.text-left {
+    text-align: left;
+}
+
+.fw-bold {
+    font-weight: 600;
+}
+
+.fw-semibold {
+    font-weight: 500;
+}
+
+/* ==========================================================================
+   LAYOUT & CONTAINERS
+   ========================================================================== */
+
+.container-main {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: var(--spacing-xl);
+}
+
+@media (max-width: 768px) {
+    .container-main {
+        padding: var(--spacing-md);
+    }
+}
+
+/* ==========================================================================
+   NAVIGATION
+   ========================================================================== */
+
+.navbar {
+    background: white;
+    box-shadow: var(--shadow-sm);
+    padding: var(--spacing-md) var(--spacing-xl);
+    position: sticky;
+    top: 0;
+    z-index: var(--z-sticky);
+}
+
+.navbar-brand {
+    font-weight: 700;
+    color: var(--green-700) !important;
+    font-size: 1.5rem;
+}
+
+.navbar-nav .nav-link {
+    color: var(--gray-700);
+    font-weight: 500;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+}
+
+.navbar-nav .nav-link:hover {
+    color: var(--green-600);
+    background-color: var(--green-50);
+}
+
+.navbar-nav .nav-link.active {
+    color: var(--green-700);
+    background-color: var(--green-100);
+}
+
+/* ==========================================================================
+   CARDS
+   ========================================================================== */
+
+.stat-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-md);
+    transition: transform var(--transition-base), box-shadow var(--transition-base);
+    height: 100%;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.stat-card .card-title {
+    font-size: 2rem;
+    margin-bottom: 0;
+}
+
+.stat-card .card-subtitle {
+    color: var(--gray-600);
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.animal-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+    box-shadow: var(--shadow-sm);
+    border-left: 4px solid transparent;
+    transition: all var(--transition-base);
+    position: relative;
+}
+
+.animal-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+}
+
+.animal-card.healthy {
+    border-left-color: var(--status-healthy);
+}
+
+.animal-card.observation {
+    border-left-color: var(--status-observation);
+}
+
+.animal-card.sick {
+    border-left-color: var(--status-sick);
+}
+
+.animal-card.recovering {
+    border-left-color: var(--status-recovering);
+}
+
+.filter-section {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+/* ==========================================================================
+   BADGES & STATUS INDICATORS
+   ========================================================================== */
+
+.health-badge {
+    display: inline-block;
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.health-badge.healthy {
+    background-color: var(--green-100);
+    color: var(--green-800);
+}
+
+.health-badge.observation {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: var(--status-observation);
+}
+
+.health-badge.sick {
+    background-color: rgba(220, 38, 38, 0.1);
+    color: var(--status-sick);
+}
+
+.health-badge.recovering {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: var(--status-recovering);
+}
+
+.status-badge {
+    display: inline-block;
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.status-badge.active {
+    background-color: var(--green-100);
+    color: var(--green-800);
+}
+
+.status-badge.inactive {
+    background-color: var(--gray-200);
+    color: var(--gray-700);
+}
+
+.status-badge.sold {
+    background-color: rgba(124, 58, 237, 0.1);
+    color: #7c3aed;
+}
+
+.status-badge.deceased {
+    background-color: var(--gray-300);
+    color: var(--gray-800);
+}
+
+.status-badge.transferred {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: var(--status-observation);
+}
+
+.quality-badge {
+    display: inline-block;
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.quality-badge.excellent {
+    background-color: var(--green-100);
+    color: var(--green-800);
+}
+
+.quality-badge.good {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: var(--quality-good);
+}
+
+.quality-badge.fair {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: var(--quality-fair);
+}
+
+.quality-badge.poor {
+    background-color: rgba(220, 38, 38, 0.1);
+    color: var(--quality-poor);
+}
+
+/* ==========================================================================
+   BUTTONS
+   ========================================================================== */
+
+.btn-dairy-primary {
+    background: linear-gradient(135deg, var(--green-600) 0%, var(--green-700) 100%);
+    border: none;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    transition: all var(--transition-base);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-dairy-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    color: white;
+}
+
+.btn-dairy-primary:active {
+    transform: translateY(0);
+}
+
+.btn-dairy-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.btn-outline-dairy {
+    border: 2px solid var(--green-600);
+    color: var(--green-600);
+    background: transparent;
+    padding: 0.625rem 1.25rem;
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    transition: all var(--transition-base);
+}
+
+.btn-outline-dairy:hover {
+    background: var(--green-600);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-outline-dairy:active {
+    transform: translateY(0);
+}
+
+.btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* ==========================================================================
+   FORMS
+   ========================================================================== */
+
+.form-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--spacing-xl);
+}
+
+.form-step {
+    background: white;
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-xl);
+    box-shadow: var(--shadow-lg);
+    margin-bottom: var(--spacing-xl);
+    display: none;
+}
+
+.form-step.active {
+    display: block;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.form-step-header {
+    border-bottom: 2px solid var(--green-100);
+    padding-bottom: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+}
+
+.form-section {
+    margin-bottom: var(--spacing-xl);
+}
+
+.form-section h5 {
+    color: var(--green-700);
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--green-100);
+}
+
+.required-field::after {
+    content: ' *';
+    color: var(--status-sick);
+}
+
+/* Form Controls */
+.form-control,
+.form-select {
+    padding: 0.625rem 0.75rem;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    transition: all var(--transition-fast);
+    background-color: white;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--green-500);
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+    outline: none;
+}
+
+.form-control.is-invalid,
+.form-select.is-invalid {
+    border-color: var(--status-sick);
+}
+
+.form-control.is-invalid:focus,
+.form-select.is-invalid:focus {
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.invalid-feedback {
+    display: block;
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    color: var(--status-sick);
+}
+
+/* Input Groups */
+.input-group {
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.input-group .form-control,
+.input-group .form-select {
+    border-radius: 0;
+}
+
+.input-group-text {
+    background-color: var(--gray-100);
+    border: 1px solid var(--gray-300);
+    padding: 0.625rem 0.75rem;
+    color: var(--gray-700);
+}
+
+/* Photo Upload */
+.photo-upload-area {
+    border: 2px dashed var(--green-300);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-2xl);
+    text-align: center;
+    background: var(--green-50);
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.photo-upload-area:hover {
+    border-color: var(--green-500);
+    background: var(--green-100);
+    transform: scale(1.01);
+}
+
+.photo-upload-area i {
+    font-size: 3rem;
+    color: var(--green-400);
+    margin-bottom: var(--spacing-md);
+}
+
+.photo-preview {
+    width: 150px;
+    height: 150px;
+    border-radius: var(--radius-lg);
+    object-fit: cover;
+    border: 3px solid white;
+    box-shadow: var(--shadow-md);
+}
+
+/* Step Indicator */
+.step-indicator {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-2xl);
+    position: relative;
+    counter-reset: step;
+}
+
+.step-indicator::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 50px;
+    right: 50px;
+    height: 2px;
+    background: var(--green-200);
+    z-index: 1;
+}
+
+.step {
+    text-align: center;
+    position: relative;
+    z-index: 2;
+    flex: 1;
+    counter-increment: step;
+}
+
+.step-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid var(--green-200);
+    color: var(--gray-500);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto var(--spacing-sm);
+    font-weight: 600;
+    transition: all var(--transition-base);
+}
+
+.step.active .step-circle {
+    background: var(--green-600);
+    border-color: var(--green-600);
+    color: white;
+    transform: scale(1.1);
+}
+
+.step.completed .step-circle {
+    background: var(--green-100);
+    border-color: var(--green-400);
+    color: var(--green-700);
+}
+
+.step-label {
+    font-size: 0.875rem;
+    color: var(--gray-600);
+    font-weight: 500;
+}
+
+.step.active .step-label {
+    color: var(--green-700);
+    font-weight: 600;
+}
+
+/* Form Actions */
+.form-actions {
+    background: white;
+    border-top: 1px solid var(--gray-200);
+    padding: var(--spacing-lg);
+    position: sticky;
+    bottom: 0;
+    z-index: var(--z-sticky);
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* ==========================================================================
+   TABLES
+   ========================================================================== */
+
+.table {
+    width: 100%;
+    margin-bottom: var(--spacing-lg);
+    color: var(--gray-700);
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.table th {
+    background-color: var(--green-50);
+    border-bottom: 2px solid var(--green-200);
+    padding: var(--spacing-md);
+    font-weight: 600;
+    text-align: left;
+    color: var(--green-800);
+}
+
+.table td {
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--gray-200);
+    vertical-align: middle;
+}
+
+.table tbody tr {
+    transition: background-color var(--transition-fast);
+}
+
+.table tbody tr:hover {
+    background-color: var(--gray-50);
+}
+
+.table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ==========================================================================
+   ANIMAL DISPLAY COMPONENTS
+   ========================================================================== */
+
+.animal-photo {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--radius-md);
+    object-fit: cover;
+    background-color: var(--gray-200);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: var(--gray-500);
+    overflow: hidden;
+}
+
+.animal-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.species-icon {
+    font-size: 1.5rem;
+    color: var(--green-600);
+}
+
+.yield-badge {
+    background-color: rgba(59, 130, 246, 0.1);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-sm);
+    text-align: center;
+    min-width: 80px;
+}
+
+/* ==========================================================================
+   MODALS
+   ========================================================================== */
+
+.modal-content {
+    border: none;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-xl);
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--gray-200);
+    padding: var(--spacing-lg);
+}
+
+.modal-body {
+    padding: var(--spacing-lg);
+}
+
+.modal-footer {
+    border-top: 1px solid var(--gray-200);
+    padding: var(--spacing-lg);
+}
+
+.modal-alert-icon {
+    font-size: 3rem;
+    margin-bottom: var(--spacing-md);
+}
+
+.modal-alert-icon.text-success {
+    color: var(--green-500);
+}
+
+.modal-alert-icon.warning {
+    color: var(--status-observation);
+}
+
+.modal-alert-icon.error {
+    color: var(--status-sick);
+}
+
+.modal-alert-icon.info {
+    color: var(--quality-good);
+}
+
+/* Milk Log Modal */
+.milk-log-modal .modal-dialog {
+    max-width: 800px;
+}
+
+.milk-log-table th {
+    background-color: var(--green-50);
+    border-bottom: 2px solid var(--green-200);
+}
+
+/* ==========================================================================
+   UTILITY CLASSES
+   ========================================================================== */
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.shadow-sm {
+    box-shadow: var(--shadow-sm);
+}
+
+.shadow-md {
+    box-shadow: var(--shadow-md);
+}
+
+.shadow-lg {
+    box-shadow: var(--shadow-lg);
+}
+
+.rounded {
+    border-radius: var(--radius-md);
+}
+
+.rounded-lg {
+    border-radius: var(--radius-lg);
+}
+
+.rounded-circle {
+    border-radius: 50%;
+}
+
+.d-flex {
+    display: flex;
+}
+
+.align-items-center {
+    align-items: center;
+}
+
+.justify-content-between {
+    justify-content: space-between;
+}
+
+.justify-content-center {
+    justify-content: center;
+}
+
+.gap-2 {
+    gap: var(--spacing-sm);
+}
+
+.gap-3 {
+    gap: var(--spacing-md);
+}
+
+.gap-4 {
+    gap: var(--spacing-lg);
+}
+
+.mb-0 { margin-bottom: 0 !important; }
+.mb-1 { margin-bottom: var(--spacing-xs) !important; }
+.mb-2 { margin-bottom: var(--spacing-sm) !important; }
+.mb-3 { margin-bottom: var(--spacing-md) !important; }
+.mb-4 { margin-bottom: var(--spacing-lg) !important; }
+.mb-5 { margin-bottom: var(--spacing-xl) !important; }
+
+.mt-0 { margin-top: 0 !important; }
+.mt-1 { margin-top: var(--spacing-xs) !important; }
+.mt-2 { margin-top: var(--spacing-sm) !important; }
+.mt-3 { margin-top: var(--spacing-md) !important; }
+.mt-4 { margin-top: var(--spacing-lg) !important; }
+.mt-5 { margin-top: var(--spacing-xl) !important; }
+
+.ms-1 { margin-left: var(--spacing-xs) !important; }
+.ms-2 { margin-left: var(--spacing-sm) !important; }
+.ms-3 { margin-left: var(--spacing-md) !important; }
+.ms-4 { margin-left: var(--spacing-lg) !important; }
+
+.me-1 { margin-right: var(--spacing-xs) !important; }
+.me-2 { margin-right: var(--spacing-sm) !important; }
+.me-3 { margin-right: var(--spacing-md) !important; }
+.me-4 { margin-right: var(--spacing-lg) !important; }
+
+.p-0 { padding: 0 !important; }
+.p-1 { padding: var(--spacing-xs) !important; }
+.p-2 { padding: var(--spacing-sm) !important; }
+.p-3 { padding: var(--spacing-md) !important; }
+.p-4 { padding: var(--spacing-lg) !important; }
+.p-5 { padding: var(--spacing-xl) !important; }
+
+/* ==========================================================================
+   PAGINATION
+   ========================================================================== */
+
+.pagination {
+    margin-bottom: 0;
+}
+
+.page-link {
+    color: var(--green-700);
+    border: 1px solid var(--green-200);
+    padding: 0.5rem 0.75rem;
+    transition: all var(--transition-fast);
+}
+
+.page-link:hover {
+    background-color: var(--green-100);
+    border-color: var(--green-300);
+    color: var(--green-800);
+}
+
+.page-item.active .page-link {
+    background-color: var(--green-600);
+    border-color: var(--green-600);
+    color: white;
+}
+
+.page-item.disabled .page-link {
+    color: var(--gray-400);
+    background-color: var(--gray-100);
+    border-color: var(--gray-200);
+}
+
+/* ==========================================================================
+   LOADING & EMPTY STATES
+   ========================================================================== */
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: var(--z-modal-backdrop);
+    backdrop-filter: blur(2px);
+}
+
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+    border-width: 0.25em;
+}
+
+.empty-state {
+    text-align: center;
+    padding: var(--spacing-2xl);
+    background: white;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+}
+
+.empty-state i {
+    font-size: 4rem;
+    color: var(--gray-300);
+    margin-bottom: var(--spacing-lg);
+}
+
+/* ==========================================================================
+   INFO CARDS & ALERTS
+   ========================================================================== */
+
+.info-card {
+    background: var(--green-50);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+    border-left: 4px solid var(--green-400);
+}
+
+.info-card i {
+    color: var(--green-600);
+}
+
+.alert {
+    border: none;
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.alert-success {
+    background-color: var(--green-50);
+    color: var(--green-800);
+    border-left: 4px solid var(--green-500);
+}
+
+.alert-warning {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: var(--status-observation);
+    border-left: 4px solid var(--status-observation);
+}
+
+.alert-danger {
+    background-color: rgba(220, 38, 38, 0.1);
+    color: var(--status-sick);
+    border-left: 4px solid var(--status-sick);
+}
+
+.alert-info {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: var(--quality-good);
+    border-left: 4px solid var(--quality-good);
+}
+
+/* ==========================================================================
+   TOAST NOTIFICATIONS
+   ========================================================================== */
+
+.toast-container {
+    position: fixed;
+    top: var(--spacing-xl);
+    right: var(--spacing-xl);
+    z-index: var(--z-toast);
+    min-width: 300px;
+}
+
+.toast {
+    border: none;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    .step-indicator {
+        flex-direction: column;
+        gap: var(--spacing-lg);
+    }
+    
+    .step-indicator::before {
+        display: none;
+    }
+    
+    .step {
+        display: flex;
+        align-items: center;
+        text-align: left;
+        gap: var(--spacing-md);
+    }
+    
+    .step-circle {
+        margin: 0;
+        flex-shrink: 0;
+    }
+    
+    .form-step {
+        padding: var(--spacing-lg);
+    }
+    
+    .btn-dairy-primary,
+    .btn-outline-dairy {
+        padding: 0.625rem 1rem;
+        font-size: 0.875rem;
+    }
+    
+    .animal-card .row > div {
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .animal-photo {
+        width: 50px;
+        height: 50px;
+        font-size: 1.25rem;
+    }
+    
+    .table th,
+    .table td {
+        padding: var(--spacing-sm);
+        font-size: 0.875rem;
+    }
+    
+    .modal-dialog {
+        margin: var(--spacing-sm);
+    }
+    
+    .toast-container {
+        left: var(--spacing-sm);
+        right: var(--spacing-sm);
+        top: var(--spacing-sm);
+    }
+}
+
+@media (max-width: 576px) {
+    h1 {
+        font-size: 2rem;
+    }
+    
+    h2 {
+        font-size: 1.75rem;
+    }
+    
+    h3 {
+        font-size: 1.5rem;
+    }
+    
+    .container-main {
+        padding: var(--spacing-sm);
+    }
+    
+    .navbar {
+        padding: var(--spacing-sm);
+    }
+    
+    .stat-card {
+        padding: var(--spacing-md);
+    }
+    
+    .stat-card .card-title {
+        font-size: 1.5rem;
+    }
+}
+
+/* ==========================================================================
+   PRINT STYLES
+   ========================================================================== */
+
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .container-main {
+        max-width: 100% !important;
+        padding: 0 !important;
+    }
+    
+    .animal-card {
+        break-inside: avoid;
+        box-shadow: none !important;
+        border: 1px solid var(--gray-300) !important;
+        margin-bottom: var(--spacing-sm);
+    }
+    
+    .btn,
+    .form-control,
+    .form-select {
+        display: none !important;
+    }
+    
+    body {
+        font-size: 12pt;
+        line-height: 1.4;
+    }
+}
+
+/* ==========================================================================
+   DARK MODE SUPPORT
+   ========================================================================== */
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --green-50: #052e16;
+        --green-100: #14532d;
+        --green-200: #166534;
+        --green-300: #15803d;
+        --green-400: #16a34a;
+        --green-500: #22c55e;
+        --green-600: #4ade80;
+        --green-700: #86efac;
+        --green-800: #bbf7d0;
+        --green-900: #dcfce7;
+        
+        --gray-50: #111827;
+        --gray-100: #1f2937;
+        --gray-200: #374151;
+        --gray-300: #4b5563;
+        --gray-400: #6b7280;
+        --gray-500: #9ca3af;
+        --gray-600: #d1d5db;
+        --gray-700: #e5e7eb;
+        --gray-800: #f3f4f6;
+        --gray-900: #f9fafb;
+    }
+    
+    body {
+        background-color: var(--gray-50);
+        color: var(--gray-800);
+    }
+    
+    .animal-card,
+    .stat-card,
+    .filter-section,
+    .form-step {
+        background-color: var(--gray-100);
+        color: var(--gray-800);
+    }
+    
+    .form-control,
+    .form-select {
+        background-color: var(--gray-200);
+        border-color: var(--gray-300);
+        color: var(--gray-800);
+    }
+    
+    .form-control:focus,
+    .form-select:focus {
+        background-color: var(--gray-200);
+        border-color: var(--green-500);
+        color: var(--gray-800);
+    }
+    
+    .navbar {
+        background-color: var(--gray-100);
+    }
+    
+    .modal-content {
+        background-color: var(--gray-100);
+        color: var(--gray-800);
+    }
+    
+    .table {
+        color: var(--gray-800);
+    }
+    
+    .table th {
+        background-color: var(--gray-200);
+        color: var(--gray-900);
+    }
+    
+    .table tbody tr:hover {
+        background-color: var(--gray-200);
+    }
+}
+
+/* ==========================================================================
+   ANIMATIONS
+   ========================================================================== */
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.slide-up {
+    animation: slideUp 0.3s ease-out;
+}
+
+/* ==========================================================================
+   ACCESSIBILITY
+   ========================================================================== */
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+:focus-visible {
+    outline: 2px solid var(--green-500);
+    outline-offset: 2px;
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+    .health-badge,
+    .status-badge,
+    .quality-badge {
+        border: 1px solid currentColor;
+    }
+    
+    .btn-dairy-primary,
+    .btn-outline-dairy {
+        border: 2px solid currentColor;
+    }
+}
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ==========================================================================
+   CUSTOM SCROLLBAR
+   ========================================================================== */
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--gray-100);
+    border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--gray-300);
+    border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--gray-400);
+}
+
+/* ==========================================================================
+   UTILITY: TEXT TRUNCATION
+   ========================================================================== */
+
+.text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.text-truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.text-truncate-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* ==========================================================================
+   UTILITY: BORDER HELPERS
+   ========================================================================== */
+
+.border {
+    border: 1px solid var(--gray-200) !important;
+}
+
+.border-top {
+    border-top: 1px solid var(--gray-200) !important;
+}
+
+.border-bottom {
+    border-bottom: 1px solid var(--gray-200) !important;
+}
+
+.border-left {
+    border-left: 1px solid var(--gray-200) !important;
+}
+
+.border-right {
+    border-right: 1px solid var(--gray-200) !important;
+}
+
+.border-0 {
+    border: none !important;
+}
+
+/* ==========================================================================
+   UTILITY: BACKGROUND COLORS
+   ========================================================================== */
+
+.bg-white {
+    background-color: white !important;
+}
+
+.bg-gray-50 {
+    background-color: var(--gray-50) !important;
+}
+
+.bg-gray-100 {
+    background-color: var(--gray-100) !important;
+}
+
+.bg-green-50 {
+    background-color: var(--green-50) !important;
+}
+
+.bg-green-100 {
+    background-color: var(--green-100) !important;
+}
+
+
+
+.text-success {
+    color: var(--green-600) !important;
+}
+
+.text-warning {
+    color: var(--status-observation) !important;
+}
+
+.text-danger {
+    color: var(--status-sick) !important;
+}
+
+.text-info {
+    color: var(--quality-good) !important;
+}
+
+.text-green-600 {
+    color: var(--green-600) !important;
+}
+
+.text-green-700 {
+    color: var(--green-700) !important;
+}
+
+.text-green-800 {
+    color: var(--green-800) !important;
+}
+
+
+   SPECIAL EFFECTS
+   ========================================================================== */
+
+.glass-effect {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+@media (prefers-color-scheme: dark) {
+    .glass-effect {
+        background: rgba(31, 41, 55, 0.8);
+    }
+}
+
+
