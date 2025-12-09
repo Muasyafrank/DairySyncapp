@@ -1,65 +1,71 @@
-// animal_registration.js - Handles animal registration form
-
-let currentStep = 1;
-let animalPhoto = null;
+// animal_registration.js - Simplified for single-page form with 6 essential fields
 
 // Breed options based on species
 const breedOptions = {
     'Cow': ['Holstein', 'Jersey', 'Guernsey', 'Ayrshire', 'Brown Swiss', 'Crossbred', 'Other'],
-    'Buffalo': ['Murrah', 'Nili-Ravi', 'Jaffarabadi', 'Surti', 'Mehsana', 'Other'],
     'Goat': ['Saanen', 'Alpine', 'Nubian', 'Boer', 'Toggenburg', 'Other'],
     'Sheep': ['Merino', 'Dorper', 'Suffolk', 'Hampshire', 'Other']
 };
 
-// Initialize form
-function initializeForm() {
-    // Set today's date as default for DOB and acquisition date
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('dob').value = today;
-    document.getElementById('acquisition_date').value = today;
-    
-    // Add event listeners
-    document.getElementById('species').addEventListener('change', updateBreedOptions);
-    document.getElementById('source').addEventListener('change', toggleSourceFields);
-    document.getElementById('dob').addEventListener('change', calculateAge);
-    
-    // Initialize breed options
-    updateBreedOptions();
-}
+// Initialize form when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    initializeForm();
+});
 
-// Generate animal ID
-function generateAnimalId() {
-    const species = document.getElementById('species').value;
-    
-    if (!species) {
-        showError('Please select a species first');
-        return;
+function initializeForm() {
+    // Set today's date as default for DOB
+    const dobField = document.getElementById('id_dob');
+    if (dobField && !dobField.value) {
+        dobField.value = new Date().toISOString().split('T')[0];
     }
     
-    const speciesPrefix = {
-        'Cow': 'COW',
-        'Buffalo': 'BUF',
-        'Goat': 'GOA',
-        'Sheep': 'SHE'
-    }[species] || 'ANM';
+    // Add event listeners
+    const speciesSelect = document.getElementById('id_species');
+    if (speciesSelect) {
+        speciesSelect.addEventListener('change', function() {
+            updateBreedOptions();
+            generateAnimalId(); // Regenerate ID when species changes
+        });
+    }
     
-    const date = new Date();
-    const datePart = date.getFullYear().toString().slice(-2) + 
-                    (date.getMonth() + 1).toString().padStart(2, '0') + 
-                    date.getDate().toString().padStart(2, '0');
+    if (dobField) {
+        dobField.addEventListener('change', calculateAge);
+    }
     
-    const randomPart = Math.floor(Math.random() * 900 + 100); // 100-999
+    // Photo preview
+    const photoInput = document.getElementById('id_photo');
+    if (photoInput) {
+        photoInput.addEventListener('change', previewPhoto);
+    }
     
-    const animalId = `${speciesPrefix}-${datePart}-${randomPart}`;
-    document.getElementById('animal_id').value = animalId;
+    // Initialize breed options if species is selected
+    updateBreedOptions();
+    
+    // Calculate age if DOB is set
+    if (dobField && dobField.value) {
+        calculateAge();
+    }
+    
+    // Generate initial animal ID
+    generateAnimalId();
+    
+    // Setup form validation
+    setupFormValidation();
 }
 
 // Update breed options based on selected species
 function updateBreedOptions() {
-    const species = document.getElementById('species').value;
-    const breedSelect = document.getElementById('breed');
+    const speciesSelect = document.getElementById('id_species');
+    const breedSelect = document.getElementById('id_breed');
     
-    // Clear existing options
+    if (!speciesSelect || !breedSelect) return;
+    
+    const species = speciesSelect.value;
+    
+    // Keep current value
+    const currentValue = breedSelect.value;
+    
+    // Clear options
     breedSelect.innerHTML = '<option value="">Select Breed</option>';
     
     if (species && breedOptions[species]) {
@@ -69,54 +75,74 @@ function updateBreedOptions() {
             option.textContent = breed;
             breedSelect.appendChild(option);
         });
+        
+        // Restore current value if it exists
+        if (currentValue) {
+            breedSelect.value = currentValue;
+        }
     }
 }
 
-// Toggle source-specific fields
-function toggleSourceFields() {
-    const source = document.getElementById('source').value;
-    const purchaseFields = document.getElementById('purchaseFields');
-    const sellerFields = document.getElementById('sellerFields');
+// Generate animal ID based on species
+function generateAnimalId() {
+    const speciesSelect = document.getElementById('id_species');
+    const animalIdField = document.getElementById('id_animal_id');
     
-    if (source === 'purchased') {
-        purchaseFields.style.display = 'block';
-        sellerFields.style.display = 'block';
-    } else {
-        purchaseFields.style.display = 'none';
-        sellerFields.style.display = 'none';
+    if (!speciesSelect || !animalIdField) return;
+    
+    if (!speciesSelect.value) {
+        animalIdField.value = ''; // Clear if no species selected
+        return;
     }
+    
+    const speciesPrefix = {
+        'Cow': 'COW',
+        'Goat': 'GOAT',
+        'Sheep': 'SHEEP'
+    }[speciesSelect.value] || 'ANM';
+    
+    const date = new Date();
+    const datePart = date.getFullYear().toString().slice(-2) + 
+                    (date.getMonth() + 1).toString().padStart(2, '0') + 
+                    date.getDate().toString().padStart(2, '0');
+    
+    const randomPart = Math.floor(Math.random() * 900 + 100); // 100-999
+    
+    const animalId = `${speciesPrefix}-${datePart}-${randomPart}`;
+    animalIdField.value = animalId;
 }
 
 // Calculate age from date of birth
 function calculateAge() {
-    const dobInput = document.getElementById('dob');
-    const yearsInput = document.getElementById('age_years');
-    const monthsInput = document.getElementById('age_months');
+    const dobField = document.getElementById('id_dob');
+    const ageYearsField = document.getElementById('id_age_years');
+    const ageMonthsField = document.getElementById('id_age_months');
     
-    if (dobInput.value) {
-        const dob = new Date(dobInput.value);
-        const today = new Date();
-        
-        let years = today.getFullYear() - dob.getFullYear();
-        let months = today.getMonth() - dob.getMonth();
-        
+    if (!dobField || !dobField.value) return;
+    
+    const dob = new Date(dobField.value);
+    const today = new Date();
+    
+    let years = today.getFullYear() - dob.getFullYear();
+    let months = today.getMonth() - dob.getMonth();
+    
+    if (months < 0) {
+        years--;
+        months += 12;
+    }
+    
+    // Adjust for day of month
+    if (today.getDate() < dob.getDate()) {
+        months--;
         if (months < 0) {
             years--;
             months += 12;
         }
-        
-        // Adjust for day of month
-        if (today.getDate() < dob.getDate()) {
-            months--;
-            if (months < 0) {
-                years--;
-                months += 12;
-            }
-        }
-        
-        yearsInput.value = years;
-        monthsInput.value = months;
     }
+    
+    // Update fields if they exist
+    if (ageYearsField) ageYearsField.value = years;
+    if (ageMonthsField) ageMonthsField.value = months;
 }
 
 // Preview uploaded photo
@@ -125,368 +151,262 @@ function previewPhoto(event) {
     const preview = document.getElementById('photoPreview');
     const uploadArea = document.querySelector('.photo-upload-area');
     
-    if (file) {
-        // Validate file size (5MB max)
-        if (file.size > 5 * 1024 * 1024) {
-            showError('File size must be less than 5MB');
-            event.target.value = ''; // Clear the input
-            return;
-        }
-        
-        // Validate file type
-        if (!file.type.match('image/jpeg') && !file.type.match('image/png')) {
-            showError('Only JPG and PNG images are allowed');
-            event.target.value = '';
-            return;
-        }
-        
-        animalPhoto = file;
-        
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            preview.src = e.target.result;
-            preview.style.display = 'block';
-            uploadArea.style.display = 'none';
-        };
-        reader.readAsDataURL(file);
+    if (!file || !preview || !uploadArea) return;
+    
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+        alert('File size must be less than 5MB');
+        event.target.value = '';
+        return;
     }
-}
-
-// Form navigation
-function nextStep() {
-    if (validateStep(currentStep)) {
-        document.getElementById(`step${currentStep}`).classList.remove('active');
-        updateStepIndicator(currentStep, 'completed');
-        
-        currentStep++;
-        document.getElementById(`step${currentStep}`).classList.add('active');
-        updateStepIndicator(currentStep, 'active');
-        
-        // Scroll to top of step
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Validate file type
+    if (!file.type.match('image/jpeg') && !file.type.match('image/png') && !file.type.match('image/jpg')) {
+        alert('Only JPG and PNG images are allowed');
+        event.target.value = '';
+        return;
     }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+        uploadArea.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
 }
 
-function prevStep() {
-    document.getElementById(`step${currentStep}`).classList.remove('active');
-    updateStepIndicator(currentStep, '');
+// Setup form validation
+function setupFormValidation() {
+    const form = document.getElementById('animalForm');
+    if (!form) return;
     
-    currentStep--;
-    document.getElementById(`step${currentStep}`).classList.add('active');
-    updateStepIndicator(currentStep, 'active');
-    
-    // Scroll to top of step
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function updateStepIndicator(step, status) {
-    const stepElement = document.querySelector(`.step[data-step="${step}"]`);
-    if (stepElement) {
-        // Remove all status classes
-        stepElement.classList.remove('active', 'completed');
+    form.addEventListener('submit', function(e) {
+        // Validate required fields
+        const requiredFields = this.querySelectorAll('[required]');
+        let isValid = true;
+        let firstInvalidField = null;
         
-        // Add new status class
-        if (status) {
-            stepElement.classList.add(status);
-        }
-    }
-}
-
-// Step validation
-function validateStep(step) {
-    let isValid = true;
-    const stepElement = document.getElementById(`step${step}`);
-    
-    // Get all required inputs in this step
-    const requiredInputs = stepElement.querySelectorAll('[required]');
-    
-    requiredInputs.forEach(input => {
-        if (!input.value.trim()) {
-            isValid = false;
-            markFieldInvalid(input, 'This field is required');
-        } else {
-            markFieldValid(input);
-            
-            // Additional validation for specific fields
-            if (input.type === 'date') {
-                const date = new Date(input.value);
-                const today = new Date();
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                field.classList.add('is-invalid');
+                isValid = false;
                 
-                if (date > today) {
-                    isValid = false;
-                    markFieldInvalid(input, 'Date cannot be in the future');
-                }
-            }
-            
-            if (input.type === 'number') {
-                const min = parseFloat(input.min);
-                const max = parseFloat(input.max);
-                const value = parseFloat(input.value);
-                
-                if (!isNaN(min) && value < min) {
-                    isValid = false;
-                    markFieldInvalid(input, `Value must be at least ${min}`);
-                }
-                
-                if (!isNaN(max) && value > max) {
-                    isValid = false;
-                    markFieldInvalid(input, `Value must be at most ${max}`);
-                }
-            }
-        }
-    });
-    
-    // Custom validation for step 1
-    if (step === 1) {
-        const species = document.getElementById('species').value;
-        if (!species) {
-            isValid = false;
-            markFieldInvalid(document.getElementById('species'), 'Please select a species');
-        }
-    }
-    
-    return isValid;
-}
-
-function markFieldInvalid(field, message) {
-    field.classList.add('is-invalid');
-    
-    // Add or update feedback message
-    let feedback = field.nextElementSibling;
-    if (!feedback || !feedback.classList.contains('invalid-feedback')) {
-        feedback = document.createElement('div');
-        feedback.className = 'invalid-feedback';
-        field.parentNode.appendChild(feedback);
-    }
-    feedback.textContent = message;
-}
-
-function markFieldValid(field) {
-    field.classList.remove('is-invalid');
-    
-    // Remove feedback message if exists
-    const feedback = field.nextElementSibling;
-    if (feedback && feedback.classList.contains('invalid-feedback')) {
-        feedback.remove();
-    }
-}
-
-// Main form validation and submission
-function validateAndSubmit() {
-    // Validate all steps
-    for (let i = 1; i <= 3; i++) {
-        if (!validateStep(i)) {
-            // Go to the first invalid step
-            if (currentStep !== i) {
-                document.getElementById(`step${currentStep}`).classList.remove('active');
-                currentStep = i;
-                document.getElementById(`step${currentStep}`).classList.add('active');
-                updateStepIndicator(currentStep, 'active');
-            }
-            
-            showError('Please fix all validation errors before submitting');
-            return;
-        }
-    }
-    
-    // Show confirmation
-    showConfirm('Register Animal', 'Are you sure you want to register this animal?', submitForm);
-}
-
-function submitForm() {
-    showLoading('Registering animal...');
-    
-    // Collect form data
-    const formData = new FormData();
-    
-    // Add all form fields
-    const formElements = document.getElementById('animalForm').elements;
-    for (let element of formElements) {
-        if (element.name && element.value) {
-            if (element.type === 'file') {
-                if (animalPhoto) {
-                    formData.append(element.name, animalPhoto);
+                // Track first invalid field
+                if (!firstInvalidField) {
+                    firstInvalidField = field;
                 }
             } else {
-                formData.append(element.name, element.value);
+                field.classList.remove('is-invalid');
+            }
+        });
+        
+        // Validate date of birth not in future
+        const dobField = document.getElementById('id_dob');
+        if (dobField && dobField.value) {
+            const dob = new Date(dobField.value);
+            const today = new Date();
+            
+            if (dob > today) {
+                dobField.classList.add('is-invalid');
+                isValid = false;
+                if (!firstInvalidField) firstInvalidField = dobField;
+                showFieldError(dobField, 'Date of birth cannot be in the future');
             }
         }
-    }
-    
-    // Convert FormData to JSON for API call
-    const data = {};
-    formData.forEach((value, key) => {
-        data[key] = value;
+        
+        if (!isValid) {
+            e.preventDefault();
+            
+            // Scroll to first invalid field
+            if (firstInvalidField) {
+                firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstInvalidField.focus();
+            }
+            
+            // Show error message
+            showToast('Please fill in all required fields marked with *', 'danger');
+            return false;
+        }
+        
+        // Show loading state
+        const submitBtn = this.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+        }
+        
+        return true;
     });
     
-    // Make API call
-    fetch('/animals/api/animals/create/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => response.json())
-    .then(result => {
-        hideLoading();
-        
-        if (result.success) {
-            showSuccess(result.message);
-            
-            // Check if "Add another" is checked
-            const addAnother = document.getElementById('addAnother').checked;
-            
-            if (addAnother) {
-                // Reset form for next animal
-                setTimeout(() => {
-                    resetForm();
-                    showSuccess('Animal registered successfully! Ready for next entry.');
-                }, 2000);
+    // Real-time validation for required fields
+    form.querySelectorAll('[required]').forEach(field => {
+        field.addEventListener('blur', function() {
+            if (!this.value.trim()) {
+                this.classList.add('is-invalid');
             } else {
-                // Show success with option to view animals
-                document.getElementById('successMessage').innerHTML = `
-                    ${result.message}<br>
-                    <small class="text-muted">ID: ${result.animal_id}</small>
-                `;
+                this.classList.remove('is-invalid');
             }
-        } else {
-            showError(result.error || 'Failed to register animal');
-        }
-    })
-    .catch(error => {
-        hideLoading();
-        showError('Network error. Please check your connection and try again.');
-        console.error('Error:', error);
+        });
+        
+        field.addEventListener('input', function() {
+            if (this.value.trim()) {
+                this.classList.remove('is-invalid');
+            }
+        });
     });
 }
 
-// Form reset
+// Show field-specific error message
+function showFieldError(field, message) {
+    // Remove existing error message
+    const existingError = field.parentNode.querySelector('.field-error-message');
+    if (existingError) {
+        existingError.remove();
+    }
+    
+    // Add new error message
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'field-error-message error-message mt-1';
+    errorDiv.textContent = message;
+    field.parentNode.appendChild(errorDiv);
+}
+
+// Clear all validation errors
+function clearValidationErrors() {
+    const form = document.getElementById('animalForm');
+    if (!form) return;
+    
+    // Remove invalid class from all fields
+    form.querySelectorAll('.is-invalid').forEach(field => {
+        field.classList.remove('is-invalid');
+    });
+    
+    // Remove all error messages
+    form.querySelectorAll('.field-error-message').forEach(error => {
+        error.remove();
+    });
+}
+
+// Reset form to default state
 function resetForm() {
-    document.getElementById('animalForm').reset();
+    const form = document.getElementById('animalForm');
+    if (form) {
+        form.reset();
+    }
     
-    // Reset steps
-    currentStep = 1;
-    document.querySelectorAll('.form-step').forEach(step => {
-        step.classList.remove('active');
-    });
-    document.getElementById('step1').classList.add('active');
-    
-    // Reset step indicators
-    document.querySelectorAll('.step').forEach(step => {
-        step.classList.remove('active', 'completed');
-    });
-    document.querySelector('.step[data-step="1"]').classList.add('active');
-    
-    // Reset photo
+    // Reset photo preview
     const preview = document.getElementById('photoPreview');
     const uploadArea = document.querySelector('.photo-upload-area');
-    preview.style.display = 'none';
-    uploadArea.style.display = 'block';
-    animalPhoto = null;
+    if (preview) {
+        preview.style.display = 'none';
+    }
+    if (uploadArea) {
+        uploadArea.style.display = 'block';
+    }
+    
+    // Set today's date as default for DOB
+    const dobField = document.getElementById('id_dob');
+    if (dobField) {
+        dobField.value = new Date().toISOString().split('T')[0];
+    }
     
     // Clear validation errors
-    document.querySelectorAll('.is-invalid').forEach(el => {
-        el.classList.remove('is-invalid');
-    });
-    document.querySelectorAll('.invalid-feedback').forEach(el => {
-        el.remove();
-    });
+    clearValidationErrors();
     
-    // Generate new ID
+    // Recalculate age
+    calculateAge();
+    
+    // Regenerate ID
     generateAnimalId();
     
-    // Set default dates
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('dob').value = today;
-    document.getElementById('acquisition_date').value = today;
+    // Update breed options
+    updateBreedOptions();
     
-    // Scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    showToast('Form reset to default values', 'info');
 }
 
-// Cancel confirmation
-function showCancelConfirmationModal() {
-    cancelConfirmationModal.show();
-}
-
-function redirectToList() {
-    window.location.href = '/animals/list/';
-}
-
-// Utility functions
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
+// Show toast notification
+function showToast(message, type = 'info') {
+    let container = document.querySelector('.toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'toast-container position-fixed top-0 end-0 p-3';
+        document.body.appendChild(container);
     }
-    return cookieValue;
-}
-
-function showLoading(message = 'Processing...') {
-    document.getElementById('loadingMessage').textContent = message;
-    loadingModal.show();
-}
-
-function hideLoading() {
-    loadingModal.hide();
-}
-
-function showSuccess(message) {
-    document.getElementById('successMessage').textContent = message;
-    successModal.show();
-}
-
-function showError(message) {
-    document.getElementById('errorMessage').textContent = message;
-    errorModal.show();
-}
-
-function showConfirm(title, message, onConfirm) {
-    // Simple confirmation alert - can be enhanced with a modal
-    if (confirm(`${title}\n\n${message}`)) {
-        onConfirm();
-    }
-}
-
-// Toast notifications
-function showToast(message, type = 'success') {
-    const toastContainer = document.createElement('div');
-    toastContainer.className = 'toast-container';
     
-    const toast = document.createElement('div');
-    toast.className = `toast align-items-center text-bg-${type} border-0`;
-    toast.setAttribute('role', 'alert');
-    toast.setAttribute('aria-live', 'assertive');
-    toast.setAttribute('aria-atomic', 'true');
-    
-    const toastBody = document.createElement('div');
-    toastBody.className = 'd-flex';
-    
-    toastBody.innerHTML = `
-        <div class="toast-body">
-            ${message}
+    const toastId = 'toast-' + Date.now();
+    const toastHtml = `
+        <div id="${toastId}" class="toast align-items-center text-bg-${type} border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
         </div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
     `;
     
-    toast.appendChild(toastBody);
-    toastContainer.appendChild(toast);
-    document.body.appendChild(toastContainer);
+    container.insertAdjacentHTML('beforeend', toastHtml);
     
-    const bsToast = new bootstrap.Toast(toast);
-    bsToast.show();
+    const toastEl = document.getElementById(toastId);
+    const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+    toast.show();
     
-    // Remove toast after it's hidden
-    toast.addEventListener('hidden.bs.toast', function() {
-        toastContainer.remove();
+    toastEl.addEventListener('hidden.bs.toast', function() {
+        toastEl.remove();
     });
 }
+
+// Utility function to show loading state
+function showLoading(message = 'Processing...') {
+    // Create loading overlay if it doesn't exist
+    let overlay = document.getElementById('loadingOverlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'loadingOverlay';
+        overlay.className = 'loading-overlay';
+        overlay.innerHTML = `
+            <div class="text-center">
+                <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;"></div>
+                <p class="text-muted">${message}</p>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+    }
+    overlay.style.display = 'flex';
+}
+
+// Utility function to hide loading state
+function hideLoading() {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
+}
+
+// Initialize any modals that might exist
+function initializeModals() {
+    const successModalEl = document.getElementById('successModal');
+    if (successModalEl && typeof bootstrap !== 'undefined') {
+        window.successModal = new bootstrap.Modal(successModalEl);
+    }
+}
+
+// Auto-dismiss alerts after 5 seconds
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+        const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
+        alerts.forEach(alert => {
+            if (typeof bootstrap !== 'undefined' && bootstrap.Alert) {
+                const fade = new bootstrap.Alert(alert);
+                fade.close();
+            }
+        });
+    }, 5000);
+});
+
+// Export functions for use in HTML inline event handlers
+window.generateAnimalId = generateAnimalId;
+window.previewPhoto = previewPhoto;
+window.resetForm = resetForm;

@@ -20,10 +20,28 @@ from dairysyncapp import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('',views.home,name='home'),
-    path('dashboard/',views.dashboard,name='dashboard'),
+    path('',views.home),
     path('login/',views.login,name='login'),
     path('register/',views.register,name='register'),
-    path('password-reset/',views.password_reset,name='password_reset'),
-    path('animals/',views.animal_list,name='animal')
+    path('password_reset/',views.password_reset,name='password_reset'),    
+    path('animal_registration/',views.animal_registration_page,name='animal-registration'),
+    path('animal_listing/',views.animal_listing_page,name='animal-listing'),
+
+
+    # Api
+    # path('animals/',views.api_get_animals,name='api_get_animals'),
+    # path('animals/create/',views.api_create_animal,name='api_create_animal'),
+    # path('statistics/',views.api_get_statistics,name='api_get_statistics'),
+    # path('milk_logs/create/',views.api_create_milk_log,name='api_create_milk_log'),
+    # path('milk_logs/bulk/',views.api_bulk_milk_entry,name='api_bulk_milk_entry'),
+    
+
+
+
+
+
+    
+
+    
+   
 ]

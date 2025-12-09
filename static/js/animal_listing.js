@@ -1,477 +1,373 @@
-// animal_listing.js - Handles animal listing and management
+// animal_listing.js - Handles animal listing and management with Django templates
 
-let currentPage = 1;
-let totalPages = 1;
-let perPage = 10;
-let currentAnimalId = null;
+// Since we're using Django templates with server-side rendering,
+// most functionality will be handled by Django views.
+// This JS file provides client-side enhancements.
 
-// Load statistics
-function loadStatistics() {
-    fetch('/animals/api/statistics/')
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const stats = data.statistics;
-                
-                // Update statistics cards
-                document.getElementById('totalAnimals').textContent = stats.total_animals;
-                
-                // Calculate healthy animals
-                const healthyCount = stats.health_distribution.find(item => item.health_status === 'healthy')?.count || 0;
-                document.getElementById('healthyAnimals').textContent = healthyCount;
-                
-                // Update milk statistics
-                document.getElementById('todayMilk').textContent = stats.today_milk_total.toFixed(1) + ' L';
-                document.getElementById('avgYield').textContent = stats.average_milk_yield.toFixed(1) + ' L';
-            }
-        })
-        .catch(error => {
-            console.error('Error loading statistics:', error);
+function initializeAnimalListing() {
+    // Add event listeners for filters
+    const searchInput = document.getElementById('searchInput');
+    const speciesFilter = document.getElementById('speciesFilter');
+    const healthFilter = document.getElementById('healthFilter');
+    const statusFilter = document.getElementById('statusFilter');
+    
+    // Apply filters on change (with debounce for search)
+    let searchTimeout;
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                applyFilters();
+            }, 300);
         });
+    }
+    
+    // Apply filters immediately for dropdowns
+    if (speciesFilter) {
+        speciesFilter.addEventListener('change', applyFilters);
+    }
+    
+    if (healthFilter) {
+        healthFilter.addEventListener('change', applyFilters);
+    }
+    
+    if (statusFilter) {
+        statusFilter.addEventListener('change', applyFilters);
+    }
+    
+    // Add click handlers for action buttons
+    document.addEventListener('click', function(event) {
+        // Handle view details button
+        if (event.target.closest('[data-action="view-details"]')) {
+            const animalId = event.target.closest('[data-animal-id]').dataset.animalId;
+            viewAnimalDetails(animalId);
+        }
+        
+        // Handle edit button
+        if (event.target.closest('[data-action="edit"]')) {
+            const animalId = event.target.closest('[data-animal-id]').dataset.animalId;
+            editAnimal(animalId);
+        }
+        
+        // Handle delete button
+        if (event.target.closest('[data-action="delete"]')) {
+            const animalId = event.target.closest('[data-animal-id]').dataset.animalId;
+            const animalName = event.target.closest('[data-animal-name]').dataset.animalName;
+            deleteAnimal(animalId, animalName);
+        }
+        
+        // Handle milk log button
+        if (event.target.closest('[data-action="add-milk"]')) {
+            const animalId = event.target.closest('[data-animal-id]').dataset.animalId;
+            addMilkLog(animalId);
+        }
+        
+        // Handle bulk select
+        if (event.target.closest('#selectAll')) {
+            const checkboxes = document.querySelectorAll('.animal-checkbox');
+            const selectAll = document.getElementById('selectAll').checked;
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAll;
+            });
+            updateBulkActions();
+        }
+        
+        // Handle individual checkbox selection
+        if (event.target.classList.contains('animal-checkbox')) {
+            updateBulkActions();
+        }
+    });
+    
+    // Initialize tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Initialize modals
+    initializeModals();
 }
 
-// Load animals with pagination
-function loadAnimals(page = 1) {
-    showLoadingOverlay();
-    
-    // Get filter values
+// Apply filters and reload page
+function applyFilters() {
     const search = document.getElementById('searchInput').value;
     const species = document.getElementById('speciesFilter').value;
     const healthStatus = document.getElementById('healthFilter').value;
     const status = document.getElementById('statusFilter').value;
     
-    // Build query string
-    const params = new URLSearchParams({
-        page: page,
-        per_page: perPage,
-        search: search,
-        species: species,
-        health_status: healthStatus,
-        status: status
-    });
+    // Build query parameters
+    const params = new URLSearchParams();
     
-    fetch(`/animals/api/animals/?${params}`)
-        .then(response => response.json())
-        .then(data => {
-            hideLoadingOverlay();
-            
-            if (data.success) {
-                renderAnimals(data.animals);
-                updatePagination(data.page, data.total_pages, data.total);
-                currentPage = data.page;
-                totalPages = data.total_pages;
-                
-                // Show/hide empty state
-                const emptyState = document.getElementById('emptyState');
-                const animalsList = document.getElementById('animalsList');
-                const pagination = document.getElementById('pagination');
-                
-                if (data.animals.length === 0) {
-                    emptyState.style.display = 'block';
-                    animalsList.style.display = 'none';
-                    pagination.style.display = 'none';
-                } else {
-                    emptyState.style.display = 'none';
-                    animalsList.style.display = 'block';
-                    pagination.style.display = 'block';
-                }
-            } else {
-                showError(data.error || 'Failed to load animals');
-            }
-        })
-        .catch(error => {
-            hideLoadingOverlay();
-            showError('Network error. Please try again.');
-            console.error('Error:', error);
-        });
+    if (search) params.append('search', search);
+    if (species) params.append('species', species);
+    if (healthStatus) params.append('health_status', healthStatus);
+    if (status) params.append('status', status);
+    
+    // Reload page with filters
+    window.location.href = `?${params.toString()}`;
 }
 
-// Render animals list
-function renderAnimals(animals) {
-    const container = document.getElementById('animalsList');
-    container.innerHTML = '';
-    
-    animals.forEach(animal => {
-        const animalCard = createAnimalCard(animal);
-        container.appendChild(animalCard);
-    });
-}
-
-// Create animal card HTML
-function createAnimalCard(animal) {
-    const card = document.createElement('div');
-    card.className = `animal-card ${animal.health_status}`;
-    
-    // Get species icon
-    const speciesIcon = getSpeciesIcon(animal.species);
-    
-    // Format last milk log
-    let lastMilkHtml = '<span class="text-muted">No milk logs</span>';
-    if (animal.latest_milk_log && animal.latest_milk_log.date) {
-        const log = animal.latest_milk_log;
-        lastMilkHtml = `
-            <div class="yield-badge">
-                <div class="fw-bold text-primary">${log.total_yield.toFixed(1)} L</div>
-                <div class="text-xsmall text-muted">${log.date}</div>
-                <span class="quality-badge ${log.quality}">${log.quality}</span>
-            </div>
-        `;
-    }
-    
-    card.innerHTML = `
-        <div class="row align-items-center">
-            <!-- Checkbox -->
-            <div class="col-auto">
-                <input type="checkbox" class="form-check-input animal-checkbox" 
-                       data-animal-id="${animal.animal_id}">
-            </div>
-            
-            <!-- Animal Info -->
-            <div class="col-md-2">
-                <div class="d-flex align-items-center">
-                    <div class="animal-photo me-3">
-                        ${animal.photo_url ? 
-                            `<img src="${animal.photo_url}" alt="${animal.name}">` : 
-                            `<i class="bi ${speciesIcon}"></i>`
-                        }
-                    </div>
-                    <div>
-                        <h6 class="mb-0 fw-bold">${animal.name}</h6>
-                        <div class="text-small text-muted">${animal.animal_id}</div>
-                        <div class="text-xsmall">
-                            <span class="badge bg-light text-dark">${animal.species}</span>
-                            <span class="badge bg-light text-dark">${animal.breed}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Health Status -->
-            <div class="col-md-2">
-                <span class="health-badge ${animal.health_status}">
-                    ${animal.health_status_display}
-                </span>
-                <div class="text-xsmall text-muted mt-1">
-                    <i class="bi bi-gender-${animal.gender === 'female' ? 'female' : 'male'}"></i>
-                    ${animal.gender}
-                </div>
-            </div>
-            
-            <!-- Age & Weight -->
-            <div class="col-md-2">
-                <div class="text-small">
-                    <div><strong>Age:</strong> ${animal.age_years}y ${animal.age_months}m</div>
-                    ${animal.weight ? `<div><strong>Weight:</strong> ${animal.weight} kg</div>` : ''}
-                    ${animal.color ? `<div><strong>Color:</strong> ${animal.color}</div>` : ''}
-                </div>
-            </div>
-            
-            <!-- Status & Location -->
-            <div class="col-md-2">
-                <span class="status-badge ${animal.status}">
-                    ${animal.status_display}
-                </span>
-                ${animal.location ? `
-                    <div class="text-xsmall text-muted mt-1">
-                        <i class="bi bi-geo-alt"></i> ${animal.location}
-                    </div>
-                ` : ''}
-            </div>
-            
-            <!-- Last Milk Production -->
-            <div class="col-md-2">
-                ${lastMilkHtml}
-            </div>
-            
-            <!-- Actions -->
-            <div class="col-md-2 text-end">
-                <div class="btn-group btn-group-sm">
-                    <button class="btn btn-outline-primary" onclick="viewMilkLogs('${animal.animal_id}', '${animal.name}')">
-                        <i class="bi bi-droplet"></i> Milk
-                    </button>
-                    <button class="btn btn-outline-secondary" onclick="editAnimal('${animal.animal_id}')">
-                        <i class="bi bi-pencil"></i>
-                    </button>
-                    <button class="btn btn-outline-danger" onclick="deleteAnimal('${animal.animal_id}', '${animal.name}')">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </div>
-                <div class="text-xsmall text-muted mt-1">
-                    Added: ${animal.created_at}
-                </div>
-            </div>
-        </div>
-    `;
-    
-    return card;
-}
-
-// Get species icon
-function getSpeciesIcon(species) {
-    const icons = {
-        'Cow': 'bi-emoji-cow',
-        'Buffalo': 'bi-emoji-waterbuffalo',
-        'Goat': 'bi-emoji-goat',
-        'Sheep': 'bi-emoji-sheep'
-    };
-    return icons[species] || 'bi-emoji-animal';
-}
-
-// Update pagination
-function updatePagination(currentPage, totalPages, totalItems) {
-    const pagination = document.getElementById('pagination');
-    const prevPage = document.getElementById('prevPage');
-    const nextPage = document.getElementById('nextPage');
-    
-    // Clear page numbers
-    const pageNumbers = pagination.querySelectorAll('.page-number');
-    pageNumbers.forEach(el => el.remove());
-    
-    // Update prev/next buttons
-    prevPage.classList.toggle('disabled', currentPage === 1);
-    nextPage.classList.toggle('disabled', currentPage === totalPages);
-    
-    // Update click handlers
-    prevPage.onclick = currentPage > 1 ? () => loadAnimals(currentPage - 1) : null;
-    nextPage.onclick = currentPage < totalPages ? () => loadAnimals(currentPage + 1) : null;
-    
-    // Add page numbers
-    const maxPagesToShow = 5;
-    let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
-    let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
-    
-    if (endPage - startPage + 1 < maxPagesToShow) {
-        startPage = Math.max(1, endPage - maxPagesToShow + 1);
-    }
-    
-    for (let i = startPage; i <= endPage; i++) {
-        const pageItem = document.createElement('li');
-        pageItem.className = `page-item page-number ${i === currentPage ? 'active' : ''}`;
-        
-        const pageLink = document.createElement('a');
-        pageLink.className = 'page-link';
-        pageLink.href = '#';
-        pageLink.textContent = i;
-        pageLink.onclick = (e) => {
-            e.preventDefault();
-            loadAnimals(i);
-        };
-        
-        pageItem.appendChild(pageLink);
-        nextPage.parentNode.insertBefore(pageItem, nextPage);
-    }
-    
-    // Show item count
-    const itemCount = document.createElement('div');
-    itemCount.className = 'text-center text-muted mt-2';
-    itemCount.textContent = `Showing ${((currentPage - 1) * perPage) + 1}-${Math.min(currentPage * perPage, totalItems)} of ${totalItems} animals`;
-    
-    // Remove existing item count
-    const existingCount = pagination.querySelector('.item-count');
-    if (existingCount) existingCount.remove();
-    
-    itemCount.className = 'item-count text-center text-muted mt-2';
-    pagination.appendChild(itemCount);
-}
-
-// Reset filters
+// Reset all filters
 function resetFilters() {
+    // Clear all filter inputs
     document.getElementById('searchInput').value = '';
     document.getElementById('speciesFilter').value = '';
     document.getElementById('healthFilter').value = '';
     document.getElementById('statusFilter').value = '';
-    loadAnimals(1);
+    
+    // Reload page without filters
+    window.location.href = window.location.pathname;
 }
 
-// View milk logs
-function viewMilkLogs(animalId, animalName) {
-    currentAnimalId = animalId;
-    document.getElementById('animalInfo').textContent = `${animalName} (${animalId})`;
-    
-    // Load milk logs
-    loadMilkLogs(animalId);
-    
-    // Show modal
-    milkLogModal.show();
-}
-
-function loadMilkLogs(animalId) {
-    // In a real implementation, you would fetch milk logs from API
-    // For now, we'll show a placeholder
-    const tableBody = document.getElementById('milkLogsTable');
-    tableBody.innerHTML = `
-        <tr>
-            <td colspan="7" class="text-center py-4">
-                <div class="spinner-border spinner-border-sm text-primary me-2"></div>
-                Loading milk logs...
-            </td>
-        </tr>
-    `;
-    
-    // Simulate API call
-    setTimeout(() => {
-        // This would be replaced with actual API call
-        // fetch(`/animals/api/milk-logs/${animalId}/`)
-        //     .then(response => response.json())
-        //     .then(data => renderMilkLogs(data.logs));
-        
-        // For demo, show empty state
-        tableBody.innerHTML = `
-            <tr>
-                <td colspan="7" class="text-center py-4">
-                    <i class="bi bi-droplet text-muted" style="font-size: 2rem;"></i>
-                    <p class="text-muted mt-2">No milk logs found</p>
-                    <button class="btn btn-sm btn-outline-primary" onclick="addMilkLog()">
-                        <i class="bi bi-plus-circle me-1"></i>Add First Milk Log
-                    </button>
-                </td>
-            </tr>
-        `;
-    }, 1000);
-}
-
-function addMilkLog() {
-    // Set today's date as default
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('logDate').value = today;
-    
-    // Reset form
-    document.getElementById('morningYield').value = '0';
-    document.getElementById('eveningYield').value = '0';
-    document.getElementById('logQuality').value = 'good';
-    document.getElementById('logNotes').value = '';
-    calculateTotalYield();
-    
-    // Show modal
-    addMilkLogModal.show();
-}
-
-function saveMilkLog() {
-    const date = document.getElementById('logDate').value;
-    const morningYield = parseFloat(document.getElementById('morningYield').value) || 0;
-    const eveningYield = parseFloat(document.getElementById('eveningYield').value) || 0;
-    const quality = document.getElementById('logQuality').value;
-    const notes = document.getElementById('logNotes').value;
-    
-    if (!date) {
-        showError('Please select a date');
-        return;
-    }
-    
-    if (!currentAnimalId) {
-        showError('No animal selected');
-        return;
-    }
-    
-    showLoading('Saving milk log...');
-    
-    // Make API call
-    fetch('/animals/api/milk-logs/create/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: JSON.stringify({
-            animal_id: currentAnimalId,
-            date: date,
-            morning_yield: morningYield,
-            evening_yield: eveningYield,
-            quality: quality,
-            notes: notes
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        hideLoading();
-        
-        if (data.success) {
-            addMilkLogModal.hide();
-            showSuccess(data.message);
-            loadMilkLogs(currentAnimalId);
-        } else {
-            showError(data.error || 'Failed to save milk log');
-        }
-    })
-    .catch(error => {
-        hideLoading();
-        showError('Network error. Please try again.');
-        console.error('Error:', error);
-    });
+// View animal details
+function viewAnimalDetails(animalId) {
+    // Navigate to animal detail page
+    window.location.href = `/animals/${animalId}/`;
 }
 
 // Edit animal
 function editAnimal(animalId) {
-    // Redirect to edit page
-    window.location.href = `/animals/edit/${animalId}/`;
+    // Navigate to edit page
+    window.location.href = `/animals/${animalId}/edit/`;
 }
 
-// Delete animal
+// Delete animal with confirmation
 function deleteAnimal(animalId, animalName) {
+    // Show confirmation modal or use browser confirm
     if (confirm(`Are you sure you want to delete "${animalName}" (${animalId})?\n\nThis action cannot be undone.`)) {
-        showLoading('Deleting animal...');
-        
-        // Make API call
-        fetch(`/animals/api/animals/${animalId}/delete/`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            hideLoading();
-            
-            if (data.success) {
-                showSuccess(data.message);
-                // Reload animals list
-                setTimeout(() => {
-                    loadAnimals(currentPage);
-                    loadStatistics();
-                }, 1000);
-            } else {
-                showError(data.error || 'Failed to delete animal');
-            }
-        })
-        .catch(error => {
-            hideLoading();
-            showError('Network error. Please try again.');
-            console.error('Error:', error);
-        });
+        // Submit delete form
+        const deleteForm = document.getElementById(`delete-form-${animalId}`);
+        if (deleteForm) {
+            deleteForm.submit();
+        } else {
+            // Fallback: navigate to delete URL
+            window.location.href = `/animals/${animalId}/delete/`;
+        }
     }
 }
 
-// Loading overlay
-function showLoadingOverlay() {
-    document.getElementById('loadingOverlay').style.display = 'flex';
+// Add milk log for animal
+function addMilkLog(animalId) {
+    // Navigate to milk log creation page
+    window.location.href = `/milk/add/?animal=${animalId}`;
 }
 
-function hideLoadingOverlay() {
-    document.getElementById('loadingOverlay').style.display = 'none';
+// Bulk actions
+function updateBulkActions() {
+    const selectedCount = document.querySelectorAll('.animal-checkbox:checked').length;
+    const bulkActions = document.getElementById('bulkActions');
+    
+    if (bulkActions) {
+        if (selectedCount > 0) {
+            bulkActions.style.display = 'flex';
+            document.getElementById('selectedCount').textContent = selectedCount;
+        } else {
+            bulkActions.style.display = 'none';
+        }
+    }
 }
 
-// Utility functions
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
+// Perform bulk action
+function performBulkAction(action) {
+    const selectedAnimals = [];
+    const checkboxes = document.querySelectorAll('.animal-checkbox:checked');
+    
+    checkboxes.forEach(checkbox => {
+        selectedAnimals.push(checkbox.dataset.animalId);
+    });
+    
+    if (selectedAnimals.length === 0) {
+        alert('Please select at least one animal.');
+        return;
+    }
+    
+    // Confirm action
+    let message = '';
+    switch(action) {
+        case 'delete':
+            message = `Are you sure you want to delete ${selectedAnimals.length} selected animal(s)?\n\nThis action cannot be undone.`;
+            break;
+        case 'status':
+            message = `Update status for ${selectedAnimals.length} selected animal(s)?`;
+            break;
+        case 'health':
+            message = `Update health status for ${selectedAnimals.length} selected animal(s)?`;
+            break;
+    }
+    
+    if (!confirm(message)) {
+        return;
+    }
+    
+    // Create and submit form for bulk action
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/animals/bulk/${action}/`;
+    
+    // Add CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (csrfToken) {
+        form.appendChild(csrfToken.cloneNode(true));
+    }
+    
+    // Add selected animals
+    selectedAnimals.forEach(animalId => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'animals';
+        input.value = animalId;
+        form.appendChild(input);
+    });
+    
+    // If updating status or health, prompt for value
+    if (action === 'status' || action === 'health') {
+        const value = prompt(`Enter new ${action}:`);
+        if (value) {
+            const valueInput = document.createElement('input');
+            valueInput.type = 'hidden';
+            valueInput.name = 'value';
+            valueInput.value = value;
+            form.appendChild(valueInput);
+        } else {
+            return; // User cancelled
+        }
+    }
+    
+    document.body.appendChild(form);
+    form.submit();
+}
+
+// Export data
+function exportData(format) {
+    const params = new URLSearchParams(window.location.search);
+    params.append('format', format);
+    params.append('export', 'true');
+    
+    // Submit export form or navigate to export URL
+    window.location.href = `/animals/export/?${params.toString()}`;
+}
+
+// Quick status update
+function quickUpdateStatus(animalId, newStatus) {
+    // Show confirmation
+    if (confirm(`Update status to "${newStatus}"?`)) {
+        // Submit form
+        const form = document.getElementById(`status-form-${animalId}`);
+        if (form) {
+            const statusInput = form.querySelector('input[name="status"]');
+            if (statusInput) {
+                statusInput.value = newStatus;
+                form.submit();
             }
         }
     }
-    return cookieValue;
 }
 
-function showSuccess(message) {
-    document.getElementById('successMessage').textContent = message;
-    successModal.show();
+// Quick health status update
+function quickUpdateHealth(animalId, newHealthStatus) {
+    // Show confirmation
+    if (confirm(`Update health status to "${newHealthStatus}"?`)) {
+        // Submit form
+        const form = document.getElementById(`health-form-${animalId}`);
+        if (form) {
+            const healthInput = form.querySelector('input[name="health_status"]');
+            if (healthInput) {
+                healthInput.value = newHealthStatus;
+                form.submit();
+            }
+        }
+    }
 }
 
-function showError(message) {
-    document.getElementById('errorMessage').textContent = message;
-    errorModal.show();
+// Search functionality with instant results (if implemented with AJAX)
+function instantSearch(query) {
+    // This would be used if you want to implement AJAX-based search
+    // For now, we're using form submission
 }
+
+// Initialize modals
+function initializeModals() {
+    // Initialize any modals if needed
+    const quickEditModal = document.getElementById('quickEditModal');
+    if (quickEditModal) {
+        window.quickEditModal = new bootstrap.Modal(quickEditModal);
+    }
+}
+
+// Show quick edit modal
+function showQuickEditModal(animalId, animalName, currentStatus, currentHealth) {
+    const modalTitle = document.getElementById('quickEditModalLabel');
+    const animalIdField = document.getElementById('modalAnimalId');
+    const statusSelect = document.getElementById('modalStatus');
+    const healthSelect = document.getElementById('modalHealthStatus');
+    
+    if (modalTitle) modalTitle.textContent = `Edit: ${animalName}`;
+    if (animalIdField) animalIdField.value = animalId;
+    if (statusSelect) statusSelect.value = currentStatus;
+    if (healthSelect) healthSelect.value = currentHealth;
+    
+    if (window.quickEditModal) {
+        quickEditModal.show();
+    }
+}
+
+// Save quick edit
+function saveQuickEdit() {
+    const animalId = document.getElementById('modalAnimalId').value;
+    const status = document.getElementById('modalStatus').value;
+    const healthStatus = document.getElementById('modalHealthStatus').value;
+    
+    // Submit form
+    const form = document.getElementById('quickEditForm');
+    if (form) {
+        form.submit();
+    }
+}
+
+// Refresh data (reload page)
+function refreshData() {
+    window.location.reload();
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    initializeAnimalListing();
+    
+    // Add keyboard shortcuts
+    document.addEventListener('keydown', function(event) {
+        // Ctrl/Cmd + F for search
+        if ((event.ctrlKey || event.metaKey) && event.key === 'f') {
+            event.preventDefault();
+            document.getElementById('searchInput').focus();
+        }
+        
+        // Ctrl/Cmd + R for refresh
+        if ((event.ctrlKey || event.metaKey) && event.key === 'r') {
+            event.preventDefault();
+            refreshData();
+        }
+        
+        // Escape to clear search
+        if (event.key === 'Escape') {
+            const searchInput = document.getElementById('searchInput');
+            if (document.activeElement === searchInput && searchInput.value) {
+                searchInput.value = '';
+                applyFilters();
+            }
+        }
+    });
+    
+    // Add pagination click handlers (if using AJAX pagination)
+    // Otherwise, pagination is handled by Django template links
+    const paginationLinks = document.querySelectorAll('.page-link[data-page]');
+    paginationLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const page = this.dataset.page;
+            const url = new URL(window.location);
+            url.searchParams.set('page', page);
+            window.location.href = url.toString();
+        });
+    });
+});
