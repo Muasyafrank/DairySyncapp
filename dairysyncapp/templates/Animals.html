@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animal Listing - Dairy Farm Management</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/animals.css">
+    
+    <style>
+        :root {
+            --green-50: #f0fdf4;
+            --green-100: #dcfce7;
+            --green-200: #bbf7d0;
+            --green-300: #86efac;
+            --green-400: #4ade80;
+            --green-500: #22c55e;
+            --green-600: #16a34a;
+            --green-700: #15803d;
+            --green-800: #166534;
+            --green-900: #14532d;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--gray-50);
+            color: var(--gray-800);
+            min-height: 100vh;
+        }
+
+        .container-main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .animal-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .animal-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .animal-card.healthy {
+            border-left-color: var(--green-500);
+        }
+
+        .animal-card.observation {
+            border-left-color: #f59e0b;
+        }
+
+        .animal-card.sick {
+            border-left-color: #dc2626;
+        }
+
+        .animal-card.recovering {
+            border-left-color: #3b82f6;
+        }
+
+        .health-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .health-badge.healthy {
+            background-color: var(--green-100);
+            color: var(--green-800);
+        }
+
+        .health-badge.observation {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .health-badge.sick {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        .health-badge.recovering {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge.active {
+            background-color: var(--green-100);
+            color: var(--green-800);
+        }
+
+        .status-badge.inactive {
+            background-color: var(--gray-200);
+            color: var(--gray-700);
+        }
+
+        .status-badge.sold {
+            background-color: #f3e8ff;
+            color: #7c3aed;
+        }
+
+        .status-badge.deceased {
+            background-color: var(--gray-300);
+            color: var(--gray-800);
+        }
+
+        .status-badge.transferred {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .quality-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .quality-badge.excellent {
+            background-color: var(--green-100);
+            color: var(--green-800);
+        }
+
+        .quality-badge.good {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .quality-badge.fair {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .quality-badge.poor {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        .yield-badge {
+            background-color: #dbeafe;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .animal-photo {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            object-fit: cover;
+            background-color: var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: var(--gray-500);
+        }
+
+        .animal-photo img {
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            object-fit: cover;
+        }
+
+        .species-icon {
+            font-size: 24px;
+            color: var(--green-600);
+        }
+
+        .btn-dairy-primary {
+            background: linear-gradient(135deg, var(--green-600) 0%, var(--green-700) 100%);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-dairy-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(22, 163, 74, 0.2);
+            color: white;
+        }
+
+        .btn-outline-dairy {
+            border: 2px solid var(--green-600);
+            color: var(--green-600);
+            background: transparent;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline-dairy:hover {
+            background: var(--green-600);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .pagination .page-link {
+            color: var(--green-700);
+            border-color: var(--green-200);
+        }
+
+        .pagination .page-link:hover {
+            background-color: var(--green-100);
+            border-color: var(--green-300);
+        }
+
+        .pagination .page-item.active .page-link {
+            background-color: var(--green-600);
+            border-color: var(--green-600);
+        }
+
+        .filter-section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            color: var(--gray-300);
+            margin-bottom: 20px;
+        }
+
+        .milk-log-modal .modal-dialog {
+            max-width: 800px;
+        }
+
+        .milk-log-table th {
+            background-color: var(--green-50);
+            border-bottom: 2px solid var(--green-200);
+        }
+
+        /* Modal Styles */
+        .modal-alert-icon {
+            font-size: 3rem;
+            color: var(--green-500);
+            margin-bottom: 1rem;
+        }
+
+        .modal-alert-icon.warning {
+            color: #f59e0b;
+        }
+
+        .modal-alert-icon.error {
+            color: #dc2626;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .animal-card .row > div {
+                margin-bottom: 10px;
+            }
+            
+            .animal-photo {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+            
+            .btn-dairy-primary, .btn-outline-dairy {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold text-success" href="#">
+                <i class="bi bi-droplet-half me-2"></i>DairySync
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link active" href="{% url 'animal-listing' %}">
+                    <i class="bi bi-list-ul me-1"></i>View Animals
+                </a>
+                <a class="nav-link" href="{% url 'animal-registration' %}">
+                    <i class="bi bi-plus-circle me-1"></i>Register Animal
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-main">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <h1 class="h2 fw-bold text-dark mb-2">Animal Listing</h1>
+                <p class="text-muted">View and manage all registered animals in your farm</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a href="{% url 'animal-registration' %}" class="btn btn-dairy-primary">
+                    <i class="bi bi-plus-circle me-2"></i>Add New Animal
+                </a>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4" id="statisticsCards">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="card-subtitle text-muted">Total Animals</h6>
+                        <i class="bi bi-people-fill text-success fs-4"></i>
+                    </div>
+                    <h3 class="card-title text-dark" id="totalAnimals">0</h3>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="card-subtitle text-muted">Healthy Animals</h6>
+                        <i class="bi bi-heart-fill text-success fs-4"></i>
+                    </div>
+                    <h3 class="card-title text-success" id="healthyAnimals">0</h3>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="card-subtitle text-muted">Today's Milk</h6>
+                        <i class="bi bi-droplet-fill text-primary fs-4"></i>
+                    </div>
+                    <h3 class="card-title text-primary" id="todayMilk">0 L</h3>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="card-subtitle text-muted">Avg Milk Yield</h6>
+                        <i class="bi bi-graph-up-arrow text-warning fs-4"></i>
+                    </div>
+                    <h3 class="card-title text-warning" id="avgYield">0 L</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-section">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <input type="text" class="form-control" id="searchInput" placeholder="Search by ID, Name, Tag...">
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="speciesFilter">
+                        <option value="">All Species</option>
+                        <option value="Cow">Cow</option>
+                        <option value="Buffalo">Buffalo</option>
+                        <option value="Goat">Goat</option>
+                        <option value="Sheep">Sheep</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="healthFilter">
+                        <option value="">All Health Status</option>
+                        <option value="healthy">Healthy</option>
+                        <option value="observation">Under Observation</option>
+                        <option value="sick">Sick</option>
+                        <option value="recovering">Recovering</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="statusFilter">
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="sold">Sold</option>
+                        <option value="deceased">Deceased</option>
+                        <option value="transferred">Transferred</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-dairy flex-grow-1" onclick="loadAnimals()">
+                            <i class="bi bi-funnel me-2"></i>Apply Filters
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="resetFilters()">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Animals List -->
+        <div id="animalsList">
+            <!-- Animals will be loaded here by JavaScript -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <i class="bi bi-search"></i>
+            <h4 class="mb-3">No Animals Found</h4>
+            <p class="text-muted mb-4">Try adjusting your search or filter criteria</p>
+            <a href="/animals/register/" class="btn btn-dairy-primary">
+                <i class="bi bi-plus-circle me-2"></i>Add Your First Animal
+            </a>
+        </div>
+
+        <!-- Pagination -->
+        <nav aria-label="Page navigation" id="pagination" style="display: none;">
+            <ul class="pagination justify-content-center mt-4">
+                <li class="page-item disabled" id="prevPage">
+                    <a class="page-link" href="#" tabindex="-1">Previous</a>
+                </li>
+                <li class="page-item" id="nextPage">
+                    <a class="page-link" href="#">Next</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="text-center">
+            <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="text-muted">Loading animals...</p>
+        </div>
+    </div>
+
+    <!-- Milk Log Modal -->
+    <div class="modal fade" id="milkLogModal" tabindex="-1">
+        <div class="modal-dialog modal-lg milk-log-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="milkLogModalLabel">Milk Production History</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 id="animalInfo" class="fw-bold"></h6>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <button class="btn btn-sm btn-outline-primary" onclick="addMilkLog()">
+                                <i class="bi bi-plus-circle me-1"></i>Add Milk Log
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover milk-log-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Morning (L)</th>
+                                    <th>Evening (L)</th>
+                                    <th>Total (L)</th>
+                                    <th>Quality</th>
+                                    <th>Notes</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="milkLogsTable">
+                                <!-- Milk logs will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Milk Log Modal -->
+    <div class="modal fade" id="addMilkLogModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Milk Log</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="milkLogForm">
+                        <div class="mb-3">
+                            <label class="form-label">Date</label>
+                            <input type="date" class="form-control" id="logDate" required>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Morning Yield (L)</label>
+                                <input type="number" class="form-control" id="morningYield" 
+                                       step="0.1" min="0" value="0" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Evening Yield (L)</label>
+                                <input type="number" class="form-control" id="eveningYield" 
+                                       step="0.1" min="0" value="0" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Total Yield</label>
+                            <div class="form-control bg-light" id="totalYield">0.0 L</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Quality</label>
+                            <select class="form-select" id="logQuality" required>
+                                <option value="good">Good</option>
+                                <option value="excellent">Excellent</option>
+                                <option value="fair">Fair</option>
+                                <option value="poor">Poor</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" id="logNotes" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveMilkLog()">Save Log</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal fade" id="successModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center py-4">
+                    <div class="modal-alert-icon">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </div>
+                    <h4 class="modal-title mb-3">Success!</h4>
+                    <p id="successMessage"></p>
+                    <button type="button" class="btn btn-success" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div class="modal fade" id="errorModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center py-4">
+                    <div class="modal-alert-icon error">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                    </div>
+                    <h4 class="modal-title mb-3">Error!</h4>
+                    <p id="errorMessage"></p>
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script src="/static/js/animal_listing.js"></script>
+    
+    <script>
+        // Initialize modals
+        let successModal = new bootstrap.Modal(document.getElementById('successModal'));
+        let errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+        let milkLogModal = new bootstrap.Modal(document.getElementById('milkLogModal'));
+        let addMilkLogModal = new bootstrap.Modal(document.getElementById('addMilkLogModal'));
+        
+        // Global variables
+        let currentPage = 1;
+        let totalPages = 1;
+        let currentAnimalId = null;
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStatistics();
+            loadAnimals();
+            
+            // Add event listeners for real-time filtering
+            document.getElementById('searchInput').addEventListener('input', debounce(loadAnimals, 300));
+            document.getElementById('speciesFilter').addEventListener('change', loadAnimals);
+            document.getElementById('healthFilter').addEventListener('change', loadAnimals);
+            document.getElementById('statusFilter').addEventListener('change', loadAnimals);
+            
+            // Milk log form calculations
+            document.getElementById('morningYield').addEventListener('input', calculateTotalYield);
+            document.getElementById('eveningYield').addEventListener('input', calculateTotalYield);
+        });
+        
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+        
+        function calculateTotalYield() {
+            const morning = parseFloat(document.getElementById('morningYield').value) || 0;
+            const evening = parseFloat(document.getElementById('eveningYield').value) || 0;
+            document.getElementById('totalYield').textContent = (morning + evening).toFixed(1) + ' L';
+        }
+    </script>
+</body>
+</html>
