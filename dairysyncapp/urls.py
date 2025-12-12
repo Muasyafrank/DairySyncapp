@@ -27,6 +27,10 @@ urlpatterns = [
     path('password_reset/', views.password_reset, name='password_reset'), 
     path('animal_registration/', views.animal_registration_page, name='animal-registration'),
     path('animal_listing/', views.animal_listing_page, name='animal-listing'),
-     path('animal/<int:animal_id>/', views.animal_detail, name='animal-detail'),  # View animal details
+    path('animal/<int:animal_id>/', views.animal_detail, name='animal-detail'),  # View animal details
     path('animal/<int:animal_id>/delete/', views.animal_delete, name='animal-delete'),  # Delete animal
-]
+    path('add_daily_log/<int:animal_id>/',views.add_daily_log,name='add-daily-log'),
+    path('edit_daily_log/<int:animal_id>/',views.edit_daily_log,name='edit-daily-log'),
+    path('animal-detail/',views.animal_detail,name='animal_detail'),
+    path('dashboard/', views.manage_logs, name='dashboard'),
+]   

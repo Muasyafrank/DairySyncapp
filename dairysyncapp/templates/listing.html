@@ -425,10 +425,12 @@
                     </div>
                     <div class="col-md-3">
                         <select class="form-select" id="statusFilter">
-                            <option value="">All Status</option>
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                            <option value="sold">Sold</option>
+                            <option value="">All  Health Status</option>
+                            <option value="healthy">Healthy</option>
+                            <option value="observation">Under Observation</option>
+                            <option value="sick">Sick</option>
+                            <option value="recovering">Recovering</option>
+                            <option value="unknown">Unknown</option>
                         </select>
                     </div>
                     <div class="col-md-2">
@@ -489,7 +491,7 @@
                     </div>
 
                     <div class="action-buttons">
-    <a href="{% url 'animal-detail' animal.id %}" class="btn-custom btn-view">
+    <a href="{% url 'add-daily-log' animal.id %}" class="btn-custom btn-view">
         <i class="bi bi-eye me-2"></i>Daily Log
     </a>
    

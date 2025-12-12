@@ -1,10 +1,13 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect,get_object_or_404
 from django.contrib.auth import login as auth_login, authenticate, logout as auth_logout
 from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
-from .models import Profile, Animal
+from django.db.models import Sum ,Count,Avg,Q
+from datetime import datetime,timedelta
+from .models import *
 import re
 
 # Home Page
@@ -223,3 +226,326 @@ def animal_delete(request, animal_id):
             return redirect('animal-listing')
     else:
         return redirect('animal-listing')   
+def add_daily_log(request, animal_id):
+    animal = get_object_or_404(Animal, id=animal_id)
+
+    if request.method == "POST":
+        try:
+            # Get form data with proper defaults
+            date = request.POST.get('date')
+            morning_milk = request.POST.get('morning_milk') or 0
+            afternoon_milk = request.POST.get('afternoon_milk') or 0
+            evening_milk = request.POST.get('evening_milk') or 0
+            feed_amount = request.POST.get('feed_amount') or 0
+            water_consumption = request.POST.get('water_consumption') or 0
+            temperature = request.POST.get('temperature') or None
+            health_observation = request.POST.get('health_observation', 'normal')
+            activity = request.POST.get('activity', 'grazing')
+            notes = request.POST.get('notes', '')
+            
+            # Check if log already exists for this date
+            existing_log = DailyLog.objects.filter(animal=animal, date=date).first()
+            
+            if existing_log:
+                messages.error(request, f'A log entry already exists for {date}. Please edit that entry instead.')
+                return redirect('animal-detail', animal_id=animal_id)
+            
+            # Create daily log
+            DailyLog.objects.create(
+                animal=animal,
+                date=date,
+                
+                # Milk production
+                morning_milk=morning_milk,
+                afternoon_milk=afternoon_milk,
+                evening_milk=evening_milk,
+                
+                # Feeding (note: field is water_consumption, not water)
+                feed_amount=feed_amount,
+                water_consumption=water_consumption,
+                
+                # Health (note: field is health_observation, not health_observations)
+                temperature=temperature if temperature else None,
+                health_observation=health_observation,
+                
+                # Activity
+                activity=activity,
+                
+                # Notes
+                notes=notes,
+                
+                # Who created it
+                created_by=request.user if request.user.is_authenticated else None
+            )
+            
+            messages.success(request, f'Daily log for {animal.name} on {date} has been added successfully.')
+            return redirect('animal-detail', animal_id=animal.id)
+            
+        except Exception as e:
+            messages.error(request, f'Error adding daily log: {str(e)}')
+            return redirect('animal-detail', animal_id=animal_id)
+
+    return render(request, 'add_daily_log.html', {'animal': animal})
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from .models import Animal, DailyLog
+
+def edit_daily_log(request, log_id):
+    """
+    Edit an existing daily log entry
+    """
+    # Get the daily log or return 404 if not found
+    daily_log = get_object_or_404(DailyLog, id=log_id)
+    animal = daily_log.animal
+
+    if request.method == 'POST':
+        try:
+            # Update milk production
+            daily_log.morning_milk = request.POST.get('morning_milk') or 0
+            daily_log.afternoon_milk = request.POST.get('afternoon_milk') or 0
+            daily_log.evening_milk = request.POST.get('evening_milk') or 0
+            
+            # Update feeding
+            daily_log.feed_amount = request.POST.get('feed_amount') or 0
+            daily_log.water_consumption = request.POST.get('water_consumption') or 0
+            
+            # Update health
+            temperature = request.POST.get('temperature')
+            daily_log.temperature = temperature if temperature else None
+            daily_log.health_observation = request.POST.get('health_observation', 'normal')
+            
+            # Update activity
+            daily_log.activity = request.POST.get('activity', 'grazing')
+            
+            # Update notes
+            daily_log.notes = request.POST.get('notes', '')
+            
+            # Save the changes
+            daily_log.save()
+            
+            messages.success(request, 'Daily log has been updated successfully.')
+            return redirect('animal-detail', animal_id=animal.id)
+            
+        except Exception as e:
+            messages.error(request, f'Error updating daily log: {str(e)}')
+            return redirect('animal-detail', animal_id=animal.id)
+    
+    # GET request - show the form with existing data
+    return render(request, 'edit_daily_log.html', {
+        'animal': animal,
+        'daily_log': daily_log
+    })
+
+
+def farmer_dashboard(request):
+    try:
+        user_profile = request.user.profile
+        
+        # Ensure user is a farmer
+        if user_profile.role != 'farmer':
+            messages.error(request, 'Access denied. Farmers only.')
+            return redirect('vet-dashboard')
+        
+        # Get date ranges
+        today = datetime.now().date()
+        week_ago = today - timedelta(days=7)
+        month_ago = today - timedelta(days=30)
+        
+        # Animal statistics
+        total_animals = Animal.objects.all().count()
+        healthy_animals = Animal.objects.filter(health_status='healthy').count()
+        sick_animals = Animal.objects.filter(health_status='sick').count()
+        
+        # Milk production stats (last 7 days)
+        weekly_milk = DailyLog.objects.filter(
+            date__gte=week_ago
+        ).aggregate(
+            total=Sum('morning_milk') + Sum('afternoon_milk') + Sum('evening_milk')
+        )
+        
+        total_milk_week = weekly_milk['total'] if weekly_milk['total'] else 0
+        
+        # Average daily milk production
+        avg_daily_milk = DailyLog.objects.filter(
+            date__gte=week_ago
+        ).aggregate(
+            avg_morning=Avg('morning_milk'),
+            avg_afternoon=Avg('afternoon_milk'),
+            avg_evening=Avg('evening_milk')
+        )
+        
+        avg_milk = 0
+        if avg_daily_milk['avg_morning']:
+            avg_milk = (
+                (avg_daily_milk['avg_morning'] or 0) +
+                (avg_daily_milk['avg_afternoon'] or 0) +
+                (avg_daily_milk['avg_evening'] or 0)
+            )
+        
+        # Recent logs (last 10)
+        recent_logs = DailyLog.objects.all().select_related('animal').order_by('-date', '-created_at')[:10]
+        
+        # Today's logs
+        todays_logs = DailyLog.objects.filter(date=today).select_related('animal')
+        
+        # Animals without logs today
+        animals_with_logs_today = todays_logs.values_list('animal_id', flat=True)
+        animals_without_logs = Animal.objects.exclude(id__in=animals_with_logs_today)
+        
+        # Animals list for quick log entry
+        all_animals = Animal.objects.all().order_by('name')
+        
+        # Health alerts
+        health_alerts = DailyLog.objects.filter(
+            date__gte=week_ago
+        ).exclude(
+            health_observation='normal'
+        ).select_related('animal').order_by('-date')[:5]
+        
+        context = {
+            'user_profile': user_profile,
+            'total_animals': total_animals,
+            'healthy_animals': healthy_animals,
+            'sick_animals': sick_animals,
+            'total_milk_week': round(total_milk_week, 2),
+            'avg_milk': round(avg_milk, 2),
+            'recent_logs': recent_logs,
+            'todays_logs': todays_logs,
+            'animals_without_logs': animals_without_logs,
+            'all_animals': all_animals,
+            'health_alerts': health_alerts,
+            'today': today,
+            'week_ago': week_ago,
+        }
+        
+        return render(request, 'farmer_dashboard.html', context)
+        
+    except Exception as e:
+        messages.error(request, f'Error loading dashboard: {str(e)}')
+        return redirect('home')
+    
+
+
+@login_required
+def quick_add_log(request):
+    """
+    Quick add log from dashboard
+    """
+    if request.method == 'POST':
+        try:
+            animal_id = request.POST.get('animal_id')
+            animal = get_object_or_404(Animal, id=animal_id)
+            date = request.POST.get('date')
+            
+            # Check if log already exists
+            existing_log = DailyLog.objects.filter(animal=animal, date=date).first()
+            if existing_log:
+                messages.error(request, f'A log for {animal.name} on {date} already exists.')
+                return redirect('farmer-dashboard')
+            
+            # Create log
+            DailyLog.objects.create(
+                animal=animal,
+                date=date,
+                morning_milk=request.POST.get('morning_milk') or 0,
+                afternoon_milk=request.POST.get('afternoon_milk') or 0,
+                evening_milk=request.POST.get('evening_milk') or 0,
+                feed_amount=request.POST.get('feed_amount') or 0,
+                water_consumption=request.POST.get('water_consumption') or 0,
+                temperature=request.POST.get('temperature') or None,
+                health_observation=request.POST.get('health_observation', 'normal'),
+                activity=request.POST.get('activity', 'grazing'),
+                notes=request.POST.get('notes', ''),
+                created_by=request.user
+            )
+            
+            messages.success(request, f'Log for {animal.name} added successfully!')
+            return redirect('farmer-dashboard')
+            
+        except Exception as e:
+            messages.error(request, f'Error adding log: {str(e)}')
+            return redirect('farmer-dashboard')
+    
+    return redirect('farmer-dashboard')
+
+
+@login_required
+def manage_logs(request):
+    """
+    Page to view and manage all logs with filters
+    """
+    try:
+        user_profile = request.user.profile
+        
+        if user_profile.role != 'farmer':
+            messages.error(request, 'Access denied.')
+            return redirect('dashboard')
+        
+        # Get filter parameters
+        animal_filter = request.GET.get('animal')
+        date_from = request.GET.get('date_from')
+        date_to = request.GET.get('date_to')
+        health_filter = request.GET.get('health')
+        
+        # Base query
+        logs = DailyLog.objects.all().select_related('animal')
+        
+        # Apply filters
+        if animal_filter:
+            logs = logs.filter(animal_id=animal_filter)
+        
+        if date_from:
+            logs = logs.filter(date__gte=date_from)
+        
+        if date_to:
+            logs = logs.filter(date__lte=date_to)
+        
+        if health_filter:
+            logs = logs.filter(health_observation=health_filter)
+        
+        # Order by date
+        logs = logs.order_by('-date', '-created_at')
+        
+        # Get all animals for filter dropdown
+        all_animals = Animal.objects.all().order_by('name')
+        
+        context = {
+            'logs': logs,
+            'all_animals': all_animals,
+            'animal_filter': animal_filter,
+            'date_from': date_from,
+            'date_to': date_to,
+            'health_filter': health_filter,
+        }
+        
+        return render(request, 'manage_logs.html', context)
+        
+    except Exception as e:
+        messages.error(request, f'Error loading logs: {str(e)}')
+        return redirect('farmer-dashboard')
+
+
+@login_required
+def bulk_delete_logs(request):
+    """
+    Delete multiple logs at once
+    """
+    if request.method == 'POST':
+        try:
+            log_ids = request.POST.getlist('log_ids')
+            
+            if not log_ids:
+                messages.warning(request, 'No logs selected.')
+                return redirect('manage-logs')
+            
+            deleted_count = DailyLog.objects.filter(id__in=log_ids).delete()[0]
+            
+            messages.success(request, f'{deleted_count} log(s) deleted successfully.')
+            return redirect('manage-logs')
+            
+        except Exception as e:
+            messages.error(request, f'Error deleting logs: {str(e)}')
+            return redirect('manage-logs')
+    
+    return redirect('manage-logs')    

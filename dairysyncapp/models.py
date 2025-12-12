@@ -80,16 +80,16 @@ class DailyLog(models.Model):
 
     # feeding
 
-    feed_amount = models.DecimalField(max_digits=6,decimal_places=3,default=0,help_text='Kilograms')
-    water = models.DecimalField(max_digits=6,decimal_places=3,default=0,help_text='Litres')
+    feed_amount = models.DecimalField(max_digits=6,decimal_places=3,help_text='Kilograms')
+    water = models.DecimalField(max_digits=6,decimal_places=3,help_text='Litres')
 
     # health obsevations
 
     temperature = models.DecimalField(max_digits=6,decimal_places=3,blank=True,null=True,help_text='°C')
-    health_observations = models.CharField(max_length=20,choices=HEALTH_OBSERVATIONS_CHOICES,default='normal')
+    health_observations = models.CharField(max_length=20,choices=HEALTH_OBSERVATIONS_CHOICES)
 
     # activities
-    activity = models.CharField(max_length=50,choices=ACTIVITY_CHOICES,default='grazing')
+    activity = models.CharField(max_length=50,choices=ACTIVITY_CHOICES)
 
     # notes
 
