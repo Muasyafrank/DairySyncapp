@@ -1,0 +1,282 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animal Registration - Dairy Farm Management</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    
+    <style>
+        :root {
+            --green-50: #f0fdf4;
+            --green-100: #dcfce7;
+            --green-500: #22c55e;
+            --green-600: #16a34a;
+            --green-700: #15803d;
+            --gray-50: #f9fafb;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-800: #1f2937;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--gray-50);
+            color: var(--gray-800);
+            min-height: 100vh;
+        }
+
+        .form-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .photo-upload-area {
+            border: 2px dashed var(--green-300);
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            background: var(--green-50);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .photo-upload-area:hover {
+            border-color: var(--green-500);
+            background: var(--green-100);
+        }
+
+        .photo-upload-area i {
+            font-size: 48px;
+            color: var(--green-400);
+            margin-bottom: 15px;
+        }
+
+        .photo-preview {
+            width: 150px;
+            height: 150px;
+            border-radius: 10px;
+            object-fit: cover;
+            display: none;
+            margin: 0 auto;
+        }
+
+        .required-field::after {
+            content: ' *';
+            color: #dc3545;
+        }
+
+        .btn-dairy-primary {
+            background: linear-gradient(135deg, var(--green-600) 0%, var(--green-700) 100%);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-dairy-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(22, 163, 74, 0.2);
+            color: white;
+        }
+
+        .btn-outline-dairy {
+            border: 2px solid var(--green-600);
+            color: var(--green-600);
+            background: transparent;
+            padding: 10px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline-dairy:hover {
+            background: var(--green-600);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* Error styling */
+        .error-message {
+            color: #dc3545;
+            font-size: 0.875em;
+            margin-top: 0.25rem;
+        }
+
+        .is-invalid {
+            border-color: #dc3545 !important;
+        }
+
+        .form-text {
+            font-size: 0.875em;
+            color: var(--gray-600);
+        }
+
+        /* Card styling */
+        .card {
+            border: none;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            border-radius: 15px;
+        }
+
+        /* Toast notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            backdrop-filter: blur(2px);
+        }
+
+        @media (max-width: 768px) {
+            .form-container {
+                padding: 15px;
+            }
+            
+            .photo-upload-area {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold text-success" href="#">
+                <i class="bi bi-droplet-half me-2"></i>DairySync
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{% url 'animal-listing' %}">
+                    <i class="bi bi-list-ul me-1"></i>View Animals
+                </a>
+                <a class="nav-link active" href="{% url 'animal-registration' %}">
+                    <i class="bi bi-plus-circle me-1"></i>Register Animal
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="form-container">
+    <!-- Page Header -->
+   
+
+    <!-- Display Django messages -->
+    <!-- Add your messages display code here -->
+
+    <!-- Animal Registration Form -->
+    <div class="form-container">
+    <!-- Page Header -->
+    <div class="text-center mb-5">
+        <h1 class="h2 fw-bold text-dark mb-3">Register New Animal</h1>
+        <p class="text-muted">Fill in the essential animal details below. Fields marked with * are required.</p>
+    </div>
+
+    <!-- Display Django messages -->
+    {% if messages %}
+    <div class="mb-4">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Animal Registration Form -->
+    <form id="animalForm" method="POST" action="{% url 'animal-registration' %}">
+        {% csrf_token %}
+        
+        <!-- Essential Fields Section -->
+        <div class="card mb-4">
+            <div class="card-body p-4">
+                <h4 class="card-title mb-4 text-success">
+                    <i class="bi bi-star-fill me-2"></i>Essential Information
+                </h4>
+                
+                <div class="form-group mb-3">
+                    <label for="name" class="form-label">Animal Name: *</label>
+                    <input type="text" name="name" id="name" class="form-control" 
+                           placeholder="E.g Bella" value="{{ form_data.name|default:'' }}" required>
+                </div>
+                <div class="form-group mb-3">
+                    <label for="species" class="form-label">Animal Species: *</label>
+                    <input type="text" name="species" id="species" class="form-control" 
+                           placeholder="E.g Cow, Goat, Sheep" value="{{ form_data.species|default:'' }}" required>
+                </div>
+                <div class="form-group mb-3">
+                    <label for="breed" class="form-label">Animal Breed: *</label>
+                    <input type="text" name="breed" id="breed" class="form-control" 
+                           placeholder="E.g Arshiye, Freshian, Dorper" value="{{ form_data.breed|default:'' }}" required>
+                </div>
+                <div class="form-group mb-3">
+                    <label for="gender" class="form-label">Animal Gender: *</label>
+                    <select name="gender" id="gender" class="form-control" required>
+                        <option value="">Select Gender</option>
+                        <option value="Male" {% if form_data.gender == 'Male' %}selected{% endif %}>Male</option>
+                        <option value="Female" {% if form_data.gender == 'Female' %}selected{% endif %}>Female</option>
+                    </select>
+                </div>
+                 <div class="form-group mb-3">
+                        <label for="health_status" class="form-label">Animal Health Status: *</label>
+                        <select name="health_status"   id="health_status" class="form-control" required>
+                            <option value="">Select Health Status</option>
+                            <option value="Healthy">Healthy</option>
+                            <option value="Sick">Sick</option>
+                            <option value="Under Observation">Under Observation</option>
+                            <option value="Recovering">Recovering</option>
+                            <option value="Unknown">Unknown</option>
+                        </select>
+            </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <div>
+                <a href="{% url 'animal-listing' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-x-circle me-2"></i>Cancel
+                </a>
+            </div>
+            
+            <button type="submit" class="btn btn-success btn-lg px-4">
+                <i class="bi bi-check-circle me-2"></i>Save Animal
+            </button>
+        </div>
+    </form>
+</div>
+</div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+   
+</body>
+</html>
