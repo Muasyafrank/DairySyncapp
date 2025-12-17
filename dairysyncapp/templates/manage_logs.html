@@ -91,7 +91,7 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-custom">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{% url 'farmer-dashboard' %}">
+            <a class="navbar-brand" href="">
                 <i class="bi bi-grid-1x2-fill me-2"></i>DairySync
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -100,7 +100,7 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'farmer-dashboard' %}">
+                        <a class="nav-link" href="">
                             <i class="bi bi-house-door me-1"></i>Dashboard
                         </a>
                     </li>
@@ -145,7 +145,7 @@
                     </h2>
                     <p class="text-muted mb-0">View, edit, and delete animal daily logs</p>
                 </div>
-                <a href="{% url 'farmer-dashboard' %}" class="btn btn-outline-primary">
+                <a href="" class="btn btn-outline-primary">
                     <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
                 </a>
             </div>
@@ -205,15 +205,22 @@
                         <i class="bi bi-list-check me-2"></i>All Logs ({{ logs.count }})
                     </h5>
                     <div>
-                        <button class="btn btn-sm btn-danger" onclick="deletSelected()" id="deleteBtn" style="display: none;">
+                        <button type="button" class="btn btn-sm btn-danger" onclick="deleteSelected()" id="deleteBtn" style="display: none;">
                             <i class="bi bi-trash me-2"></i>Delete Selected
                         </button>
                     </div>
                 </div>
             </div>
 
-            <form method="POST" action="" id="bulkDeleteForm">
+            <form method="POST" action="{% url 'bulk-delete-logs' %}" id="bulkDeleteForm">
                 {% csrf_token %}
+                <input type="hidden" name="redirect_to" value="{% url 'manage-logs' %}">
+                <!-- Add filter parameters to maintain them after deletion -->
+                <input type="hidden" name="animal_filter" value="{{ animal_filter }}">
+                <input type="hidden" name="date_from" value="{{ date_from }}">
+                <input type="hidden" name="date_to" value="{{ date_to }}">
+                <input type="hidden" name="health_filter" value="{{ health_filter }}">
+                
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <thead>
@@ -256,18 +263,15 @@
                                     <td>{{ log.get_activity_display }}</td>
                                     <td>
                                         <div class="btn-group">
-                                            <a href="{% url 'animal-detail' log.animal_id %}" class="btn btn-sm btn-outline-primary" title="View Animal"><i class="bi bi-eye"></i>
-</a>
-
+                                            <a href="{% url 'animal-detail' log.animal_id %}" class="btn btn-sm btn-outline-primary" title="View Animal">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
                                             <a href="{% url 'edit-daily-log' log.id %}" class="btn btn-sm btn-outline-success" title="Edit">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
-                                            <form method="POST" action="{% url 'delete-daily-log' log.id %}" style="display: inline;" onsubmit="return confirm('Delete this log entry?')">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </form>
+                                            <a href="{% url 'delete-daily-log' log.id %}" class="btn btn-sm btn-outline-danger" title="Delete" onclick="return confirm('Delete this log entry?')">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
                                         </div>
                                     </td>
                                 </tr>
@@ -308,7 +312,7 @@
             }
         }
 
-        function deletSelected() {
+        function deleteSelected() {
             const checkboxes = document.querySelectorAll('.log-checkbox:checked');
             if (checkboxes.length === 0) {
                 alert('Please select at least one log to delete.');

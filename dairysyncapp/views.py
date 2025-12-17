@@ -14,14 +14,12 @@ import re
 # Home Page
 def home(request):
     return render(request, 'index.html')
-
 def login_page(request):
     if request.method == 'POST':
         try:
             email = request.POST.get('email', '').strip().lower()
             password = request.POST.get('password', '')
             
-    
             try:
                 user_obj = User.objects.get(email=email)
                 username = user_obj.username
@@ -33,9 +31,21 @@ def login_page(request):
                     auth_login(request, user)
                     messages.success(request, f'Welcome back, {user.first_name}!')
                     
-                    # Redirect to next page or dashboard
-                    next_url = request.GET.get('next', 'animal-listing')
-                    return redirect(next_url)
+                    # Check user role and redirect accordingly
+                    try:
+                        profile = user.profile
+                        if profile.role == 'vet':
+                            # Redirect veterinarians to vet dashboard
+                            return redirect('vet-dashboard')
+                        else:
+                            # Redirect farmers to their dashboard or animal listing
+                            next_url = request.GET.get('next', 'animal-listing')
+                            return redirect(next_url)
+                    except Profile.DoesNotExist:
+                        # If no profile exists, redirect to default page
+                        messages.warning(request, 'Please complete your profile setup.')
+                        next_url = request.GET.get('next', 'animal-listing')
+                        return redirect(next_url)
                 else:
                     messages.error(request, 'Invalid email or password.')
             except User.DoesNotExist:
@@ -47,6 +57,17 @@ def login_page(request):
             messages.error(request, f'Login error: {str(e)}')
             return render(request, 'login.html', {'form_data': request.POST})
     else:
+        # If user is already logged in, redirect based on role
+        if request.user.is_authenticated:
+            try:
+                profile = request.user.profile
+                if profile.role == 'vet':
+                    return redirect('vet-dashboard')
+                else:
+                    return redirect('animal-listing')
+            except Profile.DoesNotExist:
+                return redirect('animal-listing')
+        
         return render(request, 'login.html')
 
 # User Registration
@@ -151,14 +172,82 @@ def register(request):
             # Log the user in automatically
             auth_login(request, user)
             
-            messages.success(request, f'Welcome to DairySync, {first_name}! Your account has been created successfully.')
-            return redirect('login')
+            # Redirect based on role
+            if role == 'vet':
+                messages.success(request, f'Welcome Dr. {first_name}! Your veterinary account has been created successfully.')
+                return redirect('vet-dashboard')  # Redirect to veterinary dashboard
+            else:
+                messages.success(request, f'Welcome to DairySync, {first_name}! Your farmer account has been created successfully.')
+                return redirect('login')  # Redirect to login page for farmers
             
         except Exception as e:
             messages.error(request, f'Error creating account: {str(e)}')
             return render(request, 'register.html', {'form_data': request.POST})
     else:
         return render(request, 'register.html')
+
+@login_required
+def vet_dashboard(request):
+    """Veterinary Dashboard View"""
+    # Check if user is a vet
+    try:
+        profile = request.user.profile
+        if profile.role != 'vet':
+            messages.error(request, 'Access denied. Veterinarian account required.')
+            return redirect('login')
+    except Profile.DoesNotExist:
+        messages.error(request, 'Profile not found. Please complete your profile.')
+        return redirect('login')
+    
+    # Get statistics for the vet dashboard
+    total_animals = Animal.objects.count()
+    
+    # Get today's date
+    today = timezone.now().date()
+    total_logs_today = DailyLog.objects.filter(date=today).count()
+    
+    # Get animals with health concerns - CORRECTED: use 'daily_logs' not 'dailylog'
+    # Method 1: Using the reverse relationship (correct way)
+    sick_animals = Animal.objects.filter(
+        daily_logs__health_observations__in=['sick', 'critical', 'needs_attention']
+    ).distinct()
+    
+    # OR Method 2: If you want only animals with recent health issues (last 7 days)
+    sick_animals = Animal.objects.filter(
+        daily_logs__health_observations__in=['sick', 'critical', 'needs_attention'],
+        daily_logs__date__gte=today - timezone.timedelta(days=7)
+    ).distinct()
+    
+    # Get recent logs with health issues
+    recent_health_issues = DailyLog.objects.filter(
+        health_observations__in=['sick', 'critical', 'needs_attention']
+    ).select_related('animal').order_by('-date')[:10]
+    
+    # Get animals that need attention (with their latest health status)
+    animals_needing_attention = []
+    for animal in sick_animals:
+        latest_log = animal.daily_logs.filter(
+            health_observations__in=['sick', 'critical', 'needs_attention']
+        ).order_by('-date').first()
+        if latest_log:
+            animals_needing_attention.append({
+                'animal': animal,
+                'latest_log': latest_log,
+                'health_status': latest_log.health_observations,
+                'date': latest_log.date
+            })
+    
+    context = {
+        'total_animals': total_animals,
+        'total_logs_today': total_logs_today,
+        'sick_animals': sick_animals,
+        'animals_needing_attention': animals_needing_attention,
+        'recent_health_issues': recent_health_issues,
+        'user_profile': profile,
+        'today': today,
+    }
+    
+    return render(request, 'vet_dashboard.html', context)
 
 # Logout View
 def logout_view(request):
@@ -368,4 +457,112 @@ def manage_logs(request):
         'date_from': date_from,
         'date_to': date_to,
         'health_filter': health_filter,
+    })
+
+@login_required
+def bulk_delete_logs(request):
+    """
+    Handle bulk deletion of daily logs
+    """
+    if request.method != 'POST':
+        messages.warning(request, 'Invalid request method.')
+        return redirect('manage-logs')
+    
+    # Get log IDs from form
+    log_ids = request.POST.getlist('log_ids')
+    
+    if not log_ids:
+        messages.warning(request, 'No logs selected for deletion.')
+        return redirect('manage-logs')
+    
+    try:
+        # Get logs to be deleted for the success message
+        logs_to_delete = DailyLog.objects.filter(id__in=log_ids).select_related('animal')
+        
+        if not logs_to_delete.exists():
+            messages.warning(request, 'No valid logs found to delete.')
+            return redirect('manage-logs')
+        
+        # Collect information for success message
+        animal_names = set()
+        date_range = []
+        
+        for log in logs_to_delete:
+            animal_names.add(log.animal.name)
+            date_range.append(log.date)
+        
+        # Delete the logs
+        deleted_count, _ = logs_to_delete.delete()
+        
+        # Create success message
+        if len(animal_names) == 1:
+            animal_msg = f"animal {list(animal_names)[0]}"
+        else:
+            animal_msg = f"{len(animal_names)} animals"
+        
+        date_min = min(date_range) if date_range else ''
+        date_max = max(date_range) if date_range else ''
+        
+        if date_min == date_max:
+            date_msg = f"from {date_min}"
+        elif date_min and date_max:
+            date_msg = f"from {date_min} to {date_max}"
+        else:
+            date_msg = ""
+        
+        messages.success(request, f'Successfully deleted {deleted_count} log(s) for {animal_msg} {date_msg}.')
+        
+        # Build redirect URL with preserved filters
+        redirect_url = 'manage-logs'
+        params = {}
+        
+        # Get filter parameters from form
+        if request.POST.get('animal_filter'):
+            params['animal'] = request.POST.get('animal_filter')
+        if request.POST.get('date_from'):
+            params['date_from'] = request.POST.get('date_from')
+        if request.POST.get('date_to'):
+            params['date_to'] = request.POST.get('date_to')
+        if request.POST.get('health_filter'):
+            params['health'] = request.POST.get('health_filter')
+        
+        # Add the redirect_to parameter if provided
+        redirect_to = request.POST.get('redirect_to', 'manage-logs')
+        
+        # Build the final URL
+        from urllib.parse import urlencode
+        if params:
+            redirect_url = f"{redirect_to}?{urlencode(params)}"
+        else:
+            redirect_url = redirect_to
+        
+        return redirect(redirect_url)
+        
+    except Exception as e:
+        messages.error(request, f'Error deleting logs: {str(e)}')
+        return redirect('manage-logs')
+@login_required
+def delete_daily_log(request, log_id):
+    """
+    Delete a single daily log entry
+    """
+    daily_log = get_object_or_404(DailyLog, id=log_id)
+    
+    if request.method == 'POST':
+        try:
+            log_date = daily_log.date
+            animal_name = daily_log.animal.name
+            daily_log.delete()
+            
+            messages.success(request, f'Daily log for {animal_name} from {log_date} has been deleted successfully.')
+            return redirect('manage-logs')
+            
+        except Exception as e:
+            messages.error(request, f'Error deleting daily log: {str(e)}')
+            return redirect('manage-logs')
+    
+    # GET request - show confirmation
+    return render(request, 'delete_daily_log.html', {
+        'daily_log': daily_log,
+        'animal': daily_log.animal,
     })

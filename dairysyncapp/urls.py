@@ -30,7 +30,10 @@ urlpatterns = [
     path('animal/<int:animal_id>/', views.animal_detail, name='animal-detail'),  # View animal details
     path('animal/<int:animal_id>/delete/', views.animal_delete, name='animal-delete'),  # Delete animal
     path('add_daily_log/<int:animal_id>/',views.add_daily_log,name='add-daily-log'),
-    path('edit_daily_log/<int:animal_id>/',views.edit_daily_log,name='edit-daily-log'),
+    path('edit_daily_log/<int:log_id>/',views.edit_daily_log,name='edit-daily-log'),
     path('animal-detail/',views.animal_detail,name='animal_detail'),
     path('manage-logs', views.manage_logs, name='manage-logs'),
+    path('delete-daily-log/<int:log_id>/', views.delete_daily_log, name='delete-daily-log'),
+    path('logs/bulk-delete/', views.bulk_delete_logs, name='bulk-delete-logs'),
+     path('vet-dashboard/', views.vet_dashboard, name='vet-dashboard'),
 ]   
