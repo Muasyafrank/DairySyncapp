@@ -206,8 +206,8 @@ def vet_dashboard(request):
     today = timezone.now().date()
     total_logs_today = DailyLog.objects.filter(date=today).count()
     
-    # Get animals with health concerns - CORRECTED: use 'daily_logs' not 'dailylog'
-    # Method 1: Using the reverse relationship (correct way)
+    
+   
     sick_animals = Animal.objects.filter(
         daily_logs__health_observations__in=['sick', 'critical', 'needs_attention']
     ).distinct()
