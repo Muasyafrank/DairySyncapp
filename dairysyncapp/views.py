@@ -14,7 +14,7 @@ import re
 # Home Page
 def home(request):
     return render(request, 'index.html')
-def login_page(request):
+def signup(request):
     if request.method == 'POST':
         try:
             email = request.POST.get('email', '').strip().lower()
@@ -38,7 +38,7 @@ def login_page(request):
                             # Redirect veterinarians to vet dashboard
                             return redirect('vet-dashboard')
                         else:
-                            # Redirect farmers to their dashboard or animal listing
+                            
                             next_url = request.GET.get('next', 'animal-listing')
                             return redirect(next_url)
                     except Profile.DoesNotExist:

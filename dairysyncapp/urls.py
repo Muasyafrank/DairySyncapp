@@ -21,7 +21,7 @@ from dairysyncapp import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.home, name='home'),
-    path('login/', views.login_page, name='login'),  # Changed to login_page
+    path('signup/', views.signup, name='signup'),  
     path('register/', views.register, name='register'),
     path('logout/', views.logout_view, name='logout'),  # Added logout
     path('password_reset/', views.password_reset, name='password_reset'), 
